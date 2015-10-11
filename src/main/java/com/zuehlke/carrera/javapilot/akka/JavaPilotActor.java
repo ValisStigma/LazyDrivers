@@ -66,6 +66,7 @@ public class JavaPilotActor extends UntypedActor {
 
         trackAnalyzer.analyzeMessage(message);
         try {
+            sensorEntryPoint.forward(message, getContext());
 
             if (message instanceof RaceStartMessage) {
                 handleRaceStart((RaceStartMessage) message);
@@ -92,7 +93,7 @@ public class JavaPilotActor extends UntypedActor {
                 handlePenaltyMessage ((PenaltyMessage) message );
 
             } else if ( message instanceof ThresholdConfiguration) {
-                sensorEntryPoint.forward(message, getContext());
+
 
             } else if ( message instanceof RoundTimeMessage ) {
                 handleRoundTime((RoundTimeMessage) message);

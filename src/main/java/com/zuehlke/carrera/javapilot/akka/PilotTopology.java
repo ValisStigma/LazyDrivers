@@ -2,6 +2,7 @@ package com.zuehlke.carrera.javapilot.akka;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import com.zuehlke.carrera.javapilot.akka.actors.ActorHandler;
 import com.zuehlke.carrera.javapilot.akka.experimental.PowerUpUntilPenalty;
 
 import java.util.HashMap;
@@ -27,7 +28,7 @@ public class PilotTopology {
 
     public Map<String, ActorRef> create() {
 
-        ActorRef initialProcessor = system.actorOf(PowerUpUntilPenalty.props(kobayashi, 1500));
+        ActorRef initialProcessor = system.actorOf(ActorHandler.props(kobayashi));
 
         entryPoints.put(PENALTY_ENTRYPOINT, initialProcessor);
         entryPoints.put(SENSOR_ENTRYPOINT, initialProcessor);
