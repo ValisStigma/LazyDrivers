@@ -29,5 +29,8 @@ public class RoundStorage {
         }
         return totalTime / getRoundCount();
     }
+    public RoundEvent getRound(int index) {
+        return rounds.get(index);
+    }
 
 }

@@ -5,7 +5,9 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.japi.Creator;
 import com.zuehlke.carrera.javapilot.akka.experimental.ThresholdConfiguration;
+import com.zuehlke.carrera.javapilot.analysis.TrackAnalyzer;
 import com.zuehlke.carrera.javapilot.config.PilotProperties;
+import com.zuehlke.carrera.javapilot.eventStorage.EventStorage;
 import com.zuehlke.carrera.javapilot.services.EndpointAnnouncement;
 import com.zuehlke.carrera.javapilot.services.PilotToRelayConnection;
 import com.zuehlke.carrera.relayapi.messages.*;
@@ -21,7 +23,8 @@ public class JavaPilotActor extends UntypedActor {
 
     private final Logger LOGGER = LoggerFactory.getLogger(JavaPilotActor.class);
     private final PilotProperties properties;
-
+    private final TrackAnalyzer trackAnalyzer;
+    private final EventStorage eventStorage;
     private ActorRef sensorEntryPoint;
     private ActorRef velocityEntryPoint;
     private ActorRef penaltyEntryPoint;
@@ -33,6 +36,8 @@ public class JavaPilotActor extends UntypedActor {
         this.properties = properties;
 
         createTopology ();
+        eventStorage = new EventStorage();
+        trackAnalyzer = new TrackAnalyzer(eventStorage, LOGGER);
     }
 
     private void createTopology() {
@@ -59,6 +64,7 @@ public class JavaPilotActor extends UntypedActor {
     @Override
     public void onReceive(Object message) throws Exception {
 
+        trackAnalyzer.analyzeMessage(message);
         try {
 
             if (message instanceof RaceStartMessage) {
