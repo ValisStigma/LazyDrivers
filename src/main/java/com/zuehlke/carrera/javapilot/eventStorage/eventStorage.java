@@ -1,11 +1,16 @@
 package com.zuehlke.carrera.javapilot.eventStorage;
+import com.zuehlke.carrera.javapilot.analysis.ElementIdentifier;
+import com.zuehlke.carrera.javapilot.eventStorage.events.RoundEvent;
 import com.zuehlke.carrera.relayapi.messages.*;
+
+import java.util.Map;
 
 public class EventStorage {
     final RoundStorage roundStorage = new RoundStorage();
     final PenaltyEventStorage penaltyStorage = new PenaltyEventStorage();
     final SensorEventStorage sensorStorage = new SensorEventStorage();
     final VelocityEventStorage velocityStorage = new VelocityEventStorage();
+    final TrackElementStorage trackElementStorage = new TrackElementStorage();
     public EventStorage() {
 
     }
@@ -41,5 +46,17 @@ public class EventStorage {
                 storeEvent((RoundTimeMessage) message);
 
             }
+    }
+
+    public void storeTrackElement(final long timeStamp, ElementIdentifier.TrackElement trackElement) {
+        trackElementStorage.storeTrackElement(timeStamp, trackElement);
+    }
+
+    public Map<Long, ElementIdentifier.TrackElement> getTrackElements() {
+        return this.trackElementStorage.getTrackElements();
+    }
+
+    public RoundEvent getRound(int index) {
+        return this.roundStorage.getRound(index);
     }
 }
