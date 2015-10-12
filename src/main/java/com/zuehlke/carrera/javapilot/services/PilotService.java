@@ -3,7 +3,6 @@ package com.zuehlke.carrera.javapilot.services;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import com.zuehlke.carrera.javapilot.akka.JavaPilotActor;
-import com.zuehlke.carrera.javapilot.akka.actors.ActorHandler;
 import com.zuehlke.carrera.javapilot.config.PilotProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
