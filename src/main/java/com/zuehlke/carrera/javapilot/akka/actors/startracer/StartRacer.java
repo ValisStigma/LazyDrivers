@@ -21,38 +21,21 @@ public class StartRacer extends LazyActor {
     public StartRacer(ActorHandler handler){
         this.handler = handler;
 
-        this.registerMessage(new ActorMessage<RaceStartMessage>() {
-            @Override
-            public Class messageType() {
-                return RaceStartMessage.class;
-            }
-
+        this.registerMessage(new ActorMessage<RaceStartMessage>(RaceStartMessage.class) {
             @Override
             public void onRecieve(RaceStartMessage message) {
-                System.out.println("Race Started!!!!!!!!!!!!!!!!!!!!!! FUJEA");
+                System.out.println("Race START!!");
             }
         });
 
-        this.registerMessage(new ActorMessage<SensorEvent>() {
-            @Override
-            public Class messageType() {
-                return SensorEvent.class;
-            }
-
+        this.registerMessage(new ActorMessage<SensorEvent>(SensorEvent.class) {
             @Override
             public void onRecieve(SensorEvent message) {
-
                 getPilot().tell(new PowerAction(100), getSelf());
-
             }
         });
 
-        this.registerMessage(new ActorMessage<RoundTimeMessage>() {
-            @Override
-            public Class messageType() {
-                return RoundTimeMessage.class;
-            }
-
+        this.registerMessage(new ActorMessage<RoundTimeMessage>(RoundTimeMessage.class) {
             @Override
             public void onRecieve(RoundTimeMessage message) {
                 System.out.println("Change cars");

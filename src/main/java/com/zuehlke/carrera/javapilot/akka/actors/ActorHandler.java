@@ -22,7 +22,7 @@ public class ActorHandler extends UntypedActor {
         LazyActor.setPilot(pilot);
 
         actors.put("StartRacer", new LazyActorRef(getContext().system().actorOf(StartRacer.props(this))));
-        actors.put("FastRacer", new LazyActorRef(getContext().system().actorOf(FastRacer.props())));
+        actors.put("FastRacer", new LazyActorRef(getContext().system().actorOf(FastRacer.props(this))));
 
         actors.get("StartRacer").startWork();
     }

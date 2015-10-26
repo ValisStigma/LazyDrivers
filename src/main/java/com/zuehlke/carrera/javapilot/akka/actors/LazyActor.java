@@ -28,7 +28,7 @@ public class LazyActor extends UntypedActor {
     @Override
     public void onReceive(Object msg) throws Exception {
         for(ActorMessage message: messages){
-            if(msg.getClass().equals(message.messageType())){
+            if(msg.getClass().equals(message.getType())){
                 message.onRecieve(msg);
             }
         }

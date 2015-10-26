@@ -1,10 +1,16 @@
 package com.zuehlke.carrera.javapilot.akka.actors;
 
-/**
- * Created by tobias on 11.10.2015.
- */
-public interface ActorMessage<T> {
-    Class messageType();
+public abstract class ActorMessage<T> {
 
-    void onRecieve(T message);
+    private Class messageType;
+
+    public Class getType(){
+        return messageType;
+    }
+
+    public ActorMessage(Class messageType){
+        this.messageType = messageType;
+    }
+
+    public abstract void onRecieve(T message);
 }
