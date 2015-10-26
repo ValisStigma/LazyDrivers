@@ -23,8 +23,6 @@ public class JavaPilotActor extends UntypedActor {
 
     private final Logger LOGGER = LoggerFactory.getLogger(JavaPilotActor.class);
     private final PilotProperties properties;
-    private final TrackAnalyzer trackAnalyzer;
-    private final EventStorage eventStorage;
     private ActorRef sensorEntryPoint;
     private ActorRef velocityEntryPoint;
     private ActorRef penaltyEntryPoint;
@@ -36,8 +34,6 @@ public class JavaPilotActor extends UntypedActor {
         this.properties = properties;
 
         createTopology ();
-        eventStorage = new EventStorage();
-        trackAnalyzer = new TrackAnalyzer(eventStorage, LOGGER);
     }
 
     private void createTopology() {
@@ -64,7 +60,6 @@ public class JavaPilotActor extends UntypedActor {
     @Override
     public void onReceive(Object message) throws Exception {
 
-        trackAnalyzer.analyzeMessage(message);
         try {
             sensorEntryPoint.forward(message, getContext());
 
