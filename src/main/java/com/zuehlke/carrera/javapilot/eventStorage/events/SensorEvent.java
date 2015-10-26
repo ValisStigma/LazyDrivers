@@ -5,7 +5,7 @@ public class SensorEvent extends Event{
     private int gyroZValue;
 
     public SensorEvent(com.zuehlke.carrera.relayapi.messages.SensorEvent sensorEvent) {
-        this.gyroZValue = sensorEvent.getG()[3];
+        this.gyroZValue = sensorEvent.getG()[2];
         this.timeStamp = sensorEvent.getTimeStamp();
     }
 
