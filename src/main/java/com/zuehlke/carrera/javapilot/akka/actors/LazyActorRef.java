@@ -5,6 +5,9 @@ import akka.actor.ActorRef;
 public class LazyActorRef {
 
     public final ActorRef actorRef;
+    public LazyActor actor = null;
+
+
     protected LazyActorRef(ActorRef actorRef) {
         this.actorRef = actorRef;
     }

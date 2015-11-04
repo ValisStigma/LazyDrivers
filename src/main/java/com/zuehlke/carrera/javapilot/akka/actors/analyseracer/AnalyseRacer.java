@@ -1,6 +1,5 @@
 package com.zuehlke.carrera.javapilot.akka.actors.analyseracer;
 
-import akka.actor.Props;
 import com.zuehlke.carrera.javapilot.akka.actors.ActorHandler;
 import com.zuehlke.carrera.javapilot.akka.actors.ActorMessage;
 import com.zuehlke.carrera.javapilot.akka.actors.LazyActor;
@@ -16,12 +15,7 @@ public class AnalyseRacer extends LazyActor {
 
     private ActorHandler handler;
 
-    public static Props props(ActorHandler handler) {
-        return Props.create(
-                AnalyseRacer.class, () -> new AnalyseRacer(handler));
-    }
-
-    AnalyseRacer(ActorHandler handler) {
+    public AnalyseRacer(ActorHandler handler) {
         this.handler = handler;
 
         eventStorage = new EventStorage();
