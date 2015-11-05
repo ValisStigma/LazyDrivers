@@ -27,7 +27,7 @@ public class BoostRacer extends LazyActor{
                         System.out.println("Boosted");
                     }
                     counter = (counter + 1) % 14;
-                    getPilot().tell(new PowerAction(255), getSelf());
+                    setPower(255);
                 }
             }
         });

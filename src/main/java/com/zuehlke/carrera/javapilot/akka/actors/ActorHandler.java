@@ -3,8 +3,10 @@ package com.zuehlke.carrera.javapilot.akka.actors;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
+import com.zuehlke.carrera.javapilot.akka.PowerAction;
 import com.zuehlke.carrera.javapilot.akka.actors.analyseracer.AnalyseRacer;
 import com.zuehlke.carrera.javapilot.akka.actors.boostracer.BoostRacer;
+import com.zuehlke.carrera.javapilot.akka.actors.powerhandler.PowerHandler;
 import com.zuehlke.carrera.javapilot.akka.actors.staticracer.StaticRacer;
 import com.zuehlke.carrera.javapilot.akka.actors.interpolationracer.DirectionHistory;
 import com.zuehlke.carrera.javapilot.akka.actors.interpolationracer.InterpolationRacer;
@@ -19,18 +21,30 @@ public class ActorHandler extends UntypedActor {
 
     public DirectionHistory directionHistory;
 
+    private ActorRef pilot;
+
+    private int currentPower = 255;
+
     public static Props props( ActorRef pilotActor ) {
         return Props.create(
                 ActorHandler.class, () -> new ActorHandler(pilotActor));
     }
 
-    private LazyActorRef create(LazyCreator<? extends  LazyActor> actorCreate){
-        return new LazyActorRef(getContext().system().actorOf(LazyActor.create(actorCreate)));
+    private LazyActorRef create(LazyCreator<? extends LazyActor> newClass){
+        return new LazyActorRef(getContext().system().actorOf(Props.create(LazyActor.class, () -> {
+            LazyActor actor = newClass.create();
+            actors.get(actor.getClass()).actor = actor;
+            return actor;
+        })));
     }
 
     public ActorHandler(ActorRef pilot){
-        LazyActor.setData(pilot, this);
+        this.pilot = pilot;
+        LazyActor.setData(this.pilot, this);
         directionHistory = new DirectionHistory();
+
+        actors.put(PowerHandler.class, create(()->new PowerHandler(this)));
+
 
         actors.put(StartRacer.class, create(() -> new StartRacer(this, StaticRacer.class)));
         actors.put(StaticRacer.class, create(() -> new StaticRacer(this)));
@@ -42,6 +56,8 @@ public class ActorHandler extends UntypedActor {
         actors.get(InterpolationRacer.class).startWork();
         actors.get(StartRacer.class).startWork();
         actors.get(AnalyseRacer.class).startWork();
+
+        actors.get(PowerHandler.class).startWork();
     }
 
     @Override
@@ -54,4 +70,11 @@ public class ActorHandler extends UntypedActor {
     }
 
 
+    public int getCurrentPower() {
+        return currentPower;
+    }
+
+    public void setCurrentPower(int currentPower) {
+        this.currentPower = currentPower;
+    }
 }

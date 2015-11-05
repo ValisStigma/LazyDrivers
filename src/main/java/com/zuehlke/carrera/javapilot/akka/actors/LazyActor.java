@@ -6,14 +6,13 @@ import akka.actor.UntypedActor;
 
 
 import java.util.ArrayList;
-import java.util.Collection;
 
 public class LazyActor extends UntypedActor {
 
-    private Collection<ActorMessage> messages = new ArrayList<>();
+    private ArrayList<ActorMessage> messages = new ArrayList<>();
 
-    private static ActorRef pilot = null;
-    private static ActorHandler handler = null;
+    private static ActorRef pilot;
+    private static ActorHandler handler;
 
     public static void setData(ActorRef pilot, ActorHandler handler){
         LazyActor.pilot = pilot;
@@ -28,14 +27,6 @@ public class LazyActor extends UntypedActor {
         messages.remove(message);
     }
 
-    public static Props create(LazyCreator<? extends LazyActor> newClass){
-        return Props.create(LazyActor.class, () -> {
-            LazyActor actor = newClass.create();
-            handler.actors.get(actor.getClass()).actor = actor;
-            return actor;
-        });
-    }
-
     @Override
     public void onReceive(Object msg) throws Exception {
         for(ActorMessage message: messages){
@@ -47,5 +38,13 @@ public class LazyActor extends UntypedActor {
 
     public ActorRef getPilot() {
         return LazyActor.pilot;
+    }
+
+    public int getPower() {
+        return handler.getCurrentPower();
+    }
+
+    public void setPower(int currentPower) {
+        handler.setCurrentPower(currentPower);
     }
 }

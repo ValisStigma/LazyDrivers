@@ -1,7 +1,5 @@
 package com.zuehlke.carrera.javapilot.akka.actors.staticracer;
 
-import akka.actor.Props;
-import com.zuehlke.carrera.javapilot.akka.PowerAction;
 import com.zuehlke.carrera.javapilot.akka.actors.ActorHandler;
 import com.zuehlke.carrera.javapilot.akka.actors.ActorMessage;
 import com.zuehlke.carrera.javapilot.akka.actors.LazyActor;
@@ -24,7 +22,7 @@ public class StaticRacer extends LazyActor{
 
         this.registerMessage(new ActorMessage<SensorEvent>(SensorEvent.class) {
             public void onRecieve(SensorEvent message) {
-                getPilot().tell(new PowerAction(currentPower), getSelf());
+                setPower(currentPower);
             }
         });
 

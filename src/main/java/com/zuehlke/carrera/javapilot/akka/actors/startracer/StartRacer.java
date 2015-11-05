@@ -18,7 +18,7 @@ public class StartRacer extends LazyActor {
         this.registerMessage(new ActorMessage<RaceStartMessage>(RaceStartMessage.class) {
             @Override
             public void onRecieve(RaceStartMessage message) {
-                getPilot().tell(new PowerAction(255), getSelf());
+                setPower(255);
             }
         });
 
