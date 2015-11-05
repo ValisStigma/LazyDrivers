@@ -21,6 +21,13 @@ public class AnalyseRacer extends LazyActor {
         eventStorage = new EventStorage();
         trackAnalyzer = new TrackAnalyzer(eventStorage);
 
+        this.registerMessage(new ActorMessage(Object.class) {
+            @Override
+            public void onRecieve(Object message) {
+                eventStorage.storeEvent(message);
+            }
+        });
+
         this.registerMessage(new ActorMessage<SensorEvent>(SensorEvent.class) {
             @Override
             public void onRecieve(SensorEvent message) {

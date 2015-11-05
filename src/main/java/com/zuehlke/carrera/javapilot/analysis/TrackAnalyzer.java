@@ -18,7 +18,6 @@ public class TrackAnalyzer {
     }
 
     public void analyzeMessage(Object message) {
-        eventStorage.storeEvent(message);
         if (message instanceof SensorEvent) {
             SensorEvent event = (SensorEvent)message;
             ElementIdentifier.TrackElement trackElement = firstRoundIdentifier.identify(event.getG()[2]);

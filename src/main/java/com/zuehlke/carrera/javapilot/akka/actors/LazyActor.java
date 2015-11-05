@@ -1,7 +1,6 @@
 package com.zuehlke.carrera.javapilot.akka.actors;
 
 import akka.actor.ActorRef;
-import akka.actor.Props;
 import akka.actor.UntypedActor;
 
 
@@ -30,7 +29,7 @@ public class LazyActor extends UntypedActor {
     @Override
     public void onReceive(Object msg) throws Exception {
         for(ActorMessage message: messages){
-            if(msg.getClass().equals(message.getType())){
+            if(message.getType().isInstance(msg)){
                 message.onRecieve(msg);
             }
         }
