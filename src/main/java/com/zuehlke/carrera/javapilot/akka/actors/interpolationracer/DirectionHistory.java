@@ -22,6 +22,8 @@ public class DirectionHistory {
     public void pushDirection(Direction dir){
         currentDirction = dir;
         directionHistory.add(dir);
+
+        System.out.println(lastDirection().toString() + ", " + currentDirection().toString());
     }
 
     public Direction currentDirection(){

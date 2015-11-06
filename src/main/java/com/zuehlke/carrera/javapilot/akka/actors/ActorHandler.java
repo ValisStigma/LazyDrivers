@@ -59,6 +59,8 @@ public class ActorHandler extends UntypedActor {
         actors.get(StartRacer.class).startWork();
         actors.get(AnalyseRacer.class).startWork();
 
+        actors.get(StaticRacer.class).startWork();
+
         actors.get(PowerHandler.class).startWork();
     }
 

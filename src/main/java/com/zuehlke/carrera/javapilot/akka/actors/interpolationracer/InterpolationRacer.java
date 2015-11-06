@@ -36,8 +36,8 @@ public class InterpolationRacer extends LazyActor{
                 }
 
                 if (dirHistory.isFirst(DirectionHistory.Direction.STRAIGHT)){
-                    //handler.actors.get(StaticRacer.class).stopWork();
-                    //handler.actors.get(BoostRacer.class).startWork();
+                    handler.actors.get(StaticRacer.class).stopWork();
+                    handler.actors.get(BoostRacer.class).startWork();
                 }
             }
         });

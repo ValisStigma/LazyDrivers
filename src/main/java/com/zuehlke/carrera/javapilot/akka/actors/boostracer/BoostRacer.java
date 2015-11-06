@@ -14,6 +14,9 @@ public class BoostRacer extends LazyActor{
     private ActorHandler handler;
     private int counter = 1;
 
+    private int boostPower = 250;
+    private int boostTimes = 10;
+
     public BoostRacer(ActorHandler handler) {
         this.handler = handler;
 
@@ -26,8 +29,8 @@ public class BoostRacer extends LazyActor{
                         handler.actors.get(BoostRacer.class).stopWork();
                         System.out.println("Boosted");
                     }
-                    counter = (counter + 1) % 14;
-                    setPower(255);
+                    counter = (counter + 1) % boostTimes;
+                    setPower(boostPower);
                 }
             }
         });

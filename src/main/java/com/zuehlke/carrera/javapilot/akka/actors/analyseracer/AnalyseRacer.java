@@ -24,7 +24,9 @@ public class AnalyseRacer extends LazyActor {
         this.registerMessage(new ActorMessage(Object.class) {
             @Override
             public void onRecieve(Object message) {
+
                 eventStorage.storeEvent(message);
+                //System.out.println(message);
             }
         });
 
