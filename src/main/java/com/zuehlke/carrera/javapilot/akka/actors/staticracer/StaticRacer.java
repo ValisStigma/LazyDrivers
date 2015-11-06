@@ -56,7 +56,6 @@ public class StaticRacer extends LazyActor{
             out.println(text);
             out.close();
         } catch (IOException e) {
-            System.out.println("FUCK OFFFF!!!!!!");
         }
     }
 }

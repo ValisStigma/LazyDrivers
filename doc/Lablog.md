@@ -10,5 +10,13 @@ Datum | Stunden | Description | Personen
 07.10.15 | 4 | Planung | Rafael + Tobias
 11.10.15 | 4 | Implementation ActorHandling | Tobias
 11.10.15 | 4 | Implementation DataStorage+DataAnalysis | Rafael + Tobias
+15.10.15 | 1 | Implementationsanfang eines Racers | Tobias
+15.10.15 | 1 | Recherche Live-Graphing-Libraries | Rafael
+16.10.15 | 3 | Racer implementierung | Tobias
+17.10.15 | 2 | Aufsetzen Node Server für Visualisierung | Rafael
+26.10.15 | 2 | Clean-Up and Fixes | Tobias
+26.10.15 | 2 | Beginn Client Visualisierung | Rafael
+05.11.15 | 5 | Racer implementations | Tobias
+05.11.15 | 5 | Kommunikation Akka - Node & Fertigstellung Entwurf Visualisierung | Rafael 
 
 
