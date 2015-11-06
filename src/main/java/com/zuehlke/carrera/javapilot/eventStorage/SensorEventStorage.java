@@ -11,7 +11,7 @@ public class SensorEventStorage {
 
     }
 
-    public void storeSensorEvent(com.zuehlke.carrera.relayapi.messages.SensorEvent sensorEvent) {
-        sensorEvents.put(sensorEvent.getTimeStamp(), new SensorEvent(sensorEvent));
+    public void storeSensorEvent(SensorEvent sensorEvent) {
+        sensorEvents.put(sensorEvent.getTimeStamp(), sensorEvent);
     }
 }

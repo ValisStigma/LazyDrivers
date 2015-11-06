@@ -117,6 +117,14 @@
             <artifactId>commons-lang</artifactId>
             <version>2.4</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.squareup.okhttp</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>2.5.0</version>
+        </dependency>
+
+
     </dependencies>
 
 

@@ -1,7 +1,9 @@
 package com.zuehlke.carrera.javapilot.eventStorage;
 import com.zuehlke.carrera.javapilot.analysis.ElementIdentifier;
-import com.zuehlke.carrera.javapilot.eventStorage.events.RoundEvent;
+import com.zuehlke.carrera.javapilot.eventStorage.events.*;
+import com.zuehlke.carrera.javapilot.visualization.Visualizer;
 import com.zuehlke.carrera.relayapi.messages.*;
+import com.zuehlke.carrera.relayapi.messages.SensorEvent;
 
 import java.util.Map;
 
@@ -11,15 +13,16 @@ public class EventStorage {
     final SensorEventStorage sensorStorage = new SensorEventStorage();
     final VelocityEventStorage velocityStorage = new VelocityEventStorage();
     final TrackElementStorage trackElementStorage = new TrackElementStorage();
+    final Visualizer visualizer = new Visualizer();
     public EventStorage() {
 
     }
 
-    private void storeEvent(VelocityMessage message) {
+    private void storeEvent(VelocityEvent message) {
         velocityStorage.storeVelocityEvent(message);
     }
 
-    private void storeEvent(RoundTimeMessage message) {
+    private void storeEvent(RoundEvent message) {
         roundStorage.storeRound(message);
     }
 
@@ -27,23 +30,31 @@ public class EventStorage {
         penaltyStorage.storePenaltyEvent(message);
     }
 
-    private void storeEvent(com.zuehlke.carrera.relayapi.messages.SensorEvent message) {
+    private void storeEvent(com.zuehlke.carrera.javapilot.eventStorage.events.SensorEvent message) {
         sensorStorage.storeSensorEvent(message);
     }
 
     public void storeEvent(Object message) {
 
             if (message instanceof SensorEvent) {
-                storeEvent((SensorEvent) message);
+                com.zuehlke.carrera.javapilot.eventStorage.events.SensorEvent event = new com.zuehlke.carrera.javapilot.eventStorage.events.SensorEvent(
+                        (SensorEvent) message);
+                storeEvent(event);
+                visualizer.sendSensorEvent(event);
 
             } else if (message instanceof VelocityMessage) {
-                storeEvent((VelocityMessage) message);
+                VelocityEvent velocityEvent = new VelocityEvent((VelocityMessage)message);
+                storeEvent(velocityEvent);
+                visualizer.sendVelocityEvent(velocityEvent);
 
             } else if (message instanceof PenaltyMessage ) {
                storeEvent((PenaltyMessage) message );
 
             } else if ( message instanceof RoundTimeMessage ) {
-                storeEvent((RoundTimeMessage) message);
+                RoundEvent roundEvent = new RoundEvent((RoundTimeMessage) message);
+                storeEvent(roundEvent);
+                visualizer.sendRoundEvent(roundEvent);
+
 
             }
     }

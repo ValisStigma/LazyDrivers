@@ -13,7 +13,7 @@ public class VelocityEventStorage {
 
     }
 
-    public void storeVelocityEvent(VelocityMessage message) {
-        sensorEvents.put(message.getTimeStamp(), new VelocityEvent(message));
+    public void storeVelocityEvent(VelocityEvent message) {
+        sensorEvents.put(message.getTimeStamp(), message);
     }
 }

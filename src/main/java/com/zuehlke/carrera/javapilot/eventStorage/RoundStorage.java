@@ -13,8 +13,8 @@ public class RoundStorage {
     public RoundStorage() {
 
     }
-    public void storeRound(RoundTimeMessage message) {
-       rounds.put(rounds.size() + 1, new RoundEvent(message));
+    public void storeRound( RoundEvent message) {
+       rounds.put(rounds.size() + 1, message);
     }
 
     public int getRoundCount() {
