@@ -7,6 +7,7 @@ import com.zuehlke.carrera.javapilot.akka.PowerAction;
 import com.zuehlke.carrera.javapilot.akka.actors.analyseracer.AnalyseRacer;
 import com.zuehlke.carrera.javapilot.akka.actors.boostracer.BoostRacer;
 import com.zuehlke.carrera.javapilot.akka.actors.powerhandler.PowerHandler;
+import com.zuehlke.carrera.javapilot.akka.actors.proberacer.ProbeRacer;
 import com.zuehlke.carrera.javapilot.akka.actors.staticracer.StaticRacer;
 import com.zuehlke.carrera.javapilot.akka.actors.interpolationracer.DirectionHistory;
 import com.zuehlke.carrera.javapilot.akka.actors.interpolationracer.InterpolationRacer;
@@ -46,8 +47,9 @@ public class ActorHandler extends UntypedActor {
         actors.put(PowerHandler.class, create(()->new PowerHandler(this)));
 
 
-        actors.put(StartRacer.class, create(() -> new StartRacer(this, StaticRacer.class)));
+        actors.put(StartRacer.class, create(() -> new StartRacer(this, ProbeRacer.class)));
         actors.put(StaticRacer.class, create(() -> new StaticRacer(this)));
+        actors.put(ProbeRacer.class, create(()-> new ProbeRacer(this)));
         actors.put(AnalyseRacer.class, create(() -> new AnalyseRacer(this)));
         actors.put(BoostRacer.class, create(() -> new BoostRacer(this)));
         actors.put(InterpolationRacer.class, create(() -> new InterpolationRacer(this, directionHistory)));
