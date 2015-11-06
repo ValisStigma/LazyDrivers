@@ -1,0 +1,12 @@
+canvas {
+    width: 100%;
+}
+.roundtime {
+    background-color:blue;
+    color:white;
+    padding:1rem;
+    border-radius: 4px;
+    box-sizing: content-box;
+    margin-bottom: 1rem;
+    text-align: center;
+}
