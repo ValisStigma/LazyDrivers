@@ -8,14 +8,6 @@ function parseRoundTime(roundTime) {
 }
 $(function() {
 
-    var chart = new SmoothieChart({millisPerPixel:49,grid:{fillStyle:'#ffffff',
-        strokeStyle:'rgba(192,192,192,0.87)',millisPerLine:10000,verticalSections:4},labels:{fontSize:16,precision:5}}),
-        canvas = document.getElementById('smoothie-chart'),
-        series = new TimeSeries();
-
-    chart.addTimeSeries(series, {lineWidth:1.9,strokeStyle:'#1621e9'});
-    chart.streamTo(canvas, 437);
-
     var gyroZCanvas = new SmoothieChart({millisPerPixel:49,grid:{fillStyle:'#ffffff',
         strokeStyle:'rgba(192,192,192,0.87)',millisPerLine:10000,verticalSections:4},labels:{fillStyle:'#ff0000',fontSize:16,precision:5}});
     gyroZCanvas.streamTo(document.getElementById("gyroZ-canvas"));
@@ -52,7 +44,6 @@ $(function() {
                         var temp = $('<div class="col-xs-4"><div class="roundtime"></div></div>');
                         temp.find('.roundtime').text('Rundenzeit: ' + parseRoundTime(message.roundTime));
                         roundTimesDiv.append(temp);
-                        //roundTimesDiv.append($('<span>Rundenzeit: ' + message.roundTime + '</span>'));
                         break;
                 }
             }
