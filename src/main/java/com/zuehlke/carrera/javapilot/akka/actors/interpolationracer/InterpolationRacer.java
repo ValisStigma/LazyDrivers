@@ -27,17 +27,17 @@ public class InterpolationRacer extends LazyActor{
                 historyZ.shift(current);
                 double interpolatedVal = (int) ((historyZ.currentMean() + current) / 2);
 
-                if(interpolatedVal < -1000){
+                if(interpolatedVal < -750){
                     dirHistory.pushDirection(DirectionHistory.Direction.LEFT);
-                }else if(interpolatedVal > 1000){
+                }else if(interpolatedVal > 750){
                     dirHistory.pushDirection(DirectionHistory.Direction.RIGHT);
                 }else{
                     dirHistory.pushDirection(DirectionHistory.Direction.STRAIGHT);
                 }
 
                 if (dirHistory.isFirst(DirectionHistory.Direction.STRAIGHT)){
-                    handler.actors.get(StaticRacer.class).stopWork();
-                    handler.actors.get(BoostRacer.class).startWork();
+                    //handler.actors.get(StaticRacer.class).stopWork();
+                    //handler.actors.get(BoostRacer.class).startWork();
                 }
             }
         });

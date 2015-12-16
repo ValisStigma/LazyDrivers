@@ -12,8 +12,8 @@ public class ProbeRacer extends LazyActor {
 
     private ActorHandler handler;
 
-    private int straightPower = 140;
-    private int curvePower = 255;
+    private int straightPower = 70;
+    private int curvePower = 250;
     private int steps = 4;
     private int current = curvePower;
 

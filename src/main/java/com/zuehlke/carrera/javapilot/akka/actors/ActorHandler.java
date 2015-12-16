@@ -3,7 +3,6 @@ package com.zuehlke.carrera.javapilot.akka.actors;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
-import com.zuehlke.carrera.javapilot.akka.PowerAction;
 import com.zuehlke.carrera.javapilot.akka.actors.analyseracer.AnalyseRacer;
 import com.zuehlke.carrera.javapilot.akka.actors.boostracer.BoostRacer;
 import com.zuehlke.carrera.javapilot.akka.actors.powerhandler.PowerHandler;
@@ -31,6 +30,12 @@ public class ActorHandler extends UntypedActor {
                 ActorHandler.class, () -> new ActorHandler(pilotActor));
     }
 
+    private LazyActorRef create(Class c, LazyCreator<? extends LazyActor> newClass){
+        LazyActorRef temp = create(newClass);
+        actors.put(c, temp);
+        return temp;
+    }
+
     private LazyActorRef create(LazyCreator<? extends LazyActor> newClass){
         return new LazyActorRef(getContext().system().actorOf(Props.create(LazyActor.class, () -> {
             LazyActor actor = newClass.create();
@@ -44,33 +49,20 @@ public class ActorHandler extends UntypedActor {
         LazyActor.setData(this.pilot, this);
         directionHistory = new DirectionHistory();
 
-        actors.put(PowerHandler.class, create(()->new PowerHandler(this)));
-
-
-        actors.put(StartRacer.class, create(() -> new StartRacer(this, ProbeRacer.class)));
-        actors.put(StaticRacer.class, create(() -> new StaticRacer(this)));
-        actors.put(ProbeRacer.class, create(()-> new ProbeRacer(this)));
-        actors.put(AnalyseRacer.class, create(() -> new AnalyseRacer(this)));
-        actors.put(BoostRacer.class, create(() -> new BoostRacer(this)));
-        actors.put(InterpolationRacer.class, create(() -> new InterpolationRacer(this, directionHistory)));
-
-
-        actors.get(InterpolationRacer.class).startWork();
-        actors.get(StartRacer.class).startWork();
-        actors.get(AnalyseRacer.class).startWork();
-
-        actors.get(StaticRacer.class).startWork();
-
-        actors.get(PowerHandler.class).startWork();
+        create(PowerHandler.class, ()->new PowerHandler(this)).startWork();
+        create(StartRacer.class, () -> new StartRacer(this, ProbeRacer.class)).startWork();
+        create(StaticRacer.class, () -> new StaticRacer(this));
+        create(ProbeRacer.class, ()-> new ProbeRacer(this));
+        create(AnalyseRacer.class, () -> new AnalyseRacer(this)).startWork();
+        create(BoostRacer.class, () -> new BoostRacer(this));
+        create(InterpolationRacer.class, () -> new InterpolationRacer(this, directionHistory)).startWork();
     }
 
     @Override
     public void onReceive(Object o) throws Exception {
-        for(LazyActorRef actor: actors.values()){
-            if(actor.isWorking()) {
-                actor.actorRef.forward(o, getContext());
-            }
-        }
+        actors.values().stream().filter(actor -> actor.isWorking()).forEach(actor -> {
+            actor.actorRef.forward(o, getContext());
+        });
     }
 
 
