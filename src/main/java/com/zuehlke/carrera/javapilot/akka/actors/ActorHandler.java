@@ -50,6 +50,7 @@ public class ActorHandler extends UntypedActor {
         directionHistory = new DirectionHistory();
 
         create(PowerHandler.class, ()->new PowerHandler(this)).startWork();
+
         create(StartRacer.class, () -> new StartRacer(this, ProbeRacer.class)).startWork();
         create(StaticRacer.class, () -> new StaticRacer(this));
         create(ProbeRacer.class, ()-> new ProbeRacer(this));

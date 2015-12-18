@@ -12,13 +12,17 @@ public class ProbeRacer extends LazyActor {
 
     private ActorHandler handler;
 
-    private int straightPower = 70;
-    private int curvePower = 250;
-    private int steps = 4;
+    private int straightPower = 0;
+    private int curvePower = 0;
+    private int steps = 20;
     private int current = curvePower;
+
+
 
     public ProbeRacer(ActorHandler handler) {
         this.handler = handler;
+
+
 
         this.registerMessage(new ActorMessage<SensorEvent>(SensorEvent.class) {
             @Override
