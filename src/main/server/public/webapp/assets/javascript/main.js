@@ -24,7 +24,7 @@ $(function() {
 
     var socket = io.connect('http://localhost:8070');
     var roundTimesDiv = $('#round-times');
-
+    var currentTrackElement = $('#current-track-element');
 
 
     socket.on('pushdata', function (data) {
@@ -34,10 +34,10 @@ $(function() {
                 console.log(type);
                 switch (type) {
                     case 'sensorEvent':
-                        gyroZ.append(new Date().getTime(), message.datapoint);
+                        gyroZ.append(message.timestamp, message.datapoint);
                         break;
                     case 'velocityEvent':
-                        velocity.append(new Date().getTime(), message.datapoint);
+                        velocity.append(message.timestamp, message.datapoint);
                         break;
                     case 'roundEvent':
                         console.log(message);
@@ -45,6 +45,10 @@ $(function() {
                         temp.find('.roundtime').text('Rundenzeit: ' + parseRoundTime(message.roundTime));
                         roundTimesDiv.append(temp);
                         break;
+                    case 'trackElement':
+                        console.log(message);
+                        currentTrackElement.text(message.trackElement);
+
                 }
             }
         });

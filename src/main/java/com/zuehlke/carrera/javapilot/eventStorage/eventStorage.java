@@ -1,5 +1,6 @@
 package com.zuehlke.carrera.javapilot.eventStorage;
 import com.zuehlke.carrera.javapilot.analysis.ElementIdentifier;
+import com.zuehlke.carrera.javapilot.analysis.TrackAnalyzer;
 import com.zuehlke.carrera.javapilot.eventStorage.events.*;
 import com.zuehlke.carrera.javapilot.visualization.Visualizer;
 import com.zuehlke.carrera.relayapi.messages.*;
@@ -13,6 +14,7 @@ public class EventStorage {
     final SensorEventStorage sensorStorage = new SensorEventStorage();
     final VelocityEventStorage velocityStorage = new VelocityEventStorage();
     final TrackElementStorage trackElementStorage = new TrackElementStorage();
+    private TrackAnalyzer trackAnalyzer = new TrackAnalyzer();
     final Visualizer visualizer = new Visualizer();
     public EventStorage() {
 
@@ -41,6 +43,7 @@ public class EventStorage {
                         (SensorEvent) message);
                 storeEvent(event);
                 visualizer.sendSensorEvent(event);
+                visualizer.sendTrackElement(trackAnalyzer.analyzeMessage(event));
 
             } else if (message instanceof VelocityMessage) {
                 VelocityEvent velocityEvent = new VelocityEvent((VelocityMessage)message);
@@ -54,8 +57,6 @@ public class EventStorage {
                 RoundEvent roundEvent = new RoundEvent((RoundTimeMessage) message);
                 storeEvent(roundEvent);
                 visualizer.sendRoundEvent(roundEvent);
-
-
             }
     }
 

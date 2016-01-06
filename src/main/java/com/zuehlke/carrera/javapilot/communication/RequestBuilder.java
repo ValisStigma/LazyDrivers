@@ -1,5 +1,6 @@
 package com.zuehlke.carrera.javapilot.communication;
 
+import com.zuehlke.carrera.javapilot.analysis.ElementIdentifier;
 import com.zuehlke.carrera.javapilot.eventStorage.events.RoundEvent;
 import com.zuehlke.carrera.javapilot.eventStorage.events.SensorEvent;
 import com.zuehlke.carrera.javapilot.eventStorage.events.VelocityEvent;
@@ -16,6 +17,14 @@ public class RequestBuilder {
         requestData.put("data", jsonObject);
         return requestData;
     }
+
+    public static JSONObject getTrackElementRequest(ElementIdentifier.TrackElement trackElement) {
+        JSONObject requestData = new JSONObject();
+        requestData.put("type", "trackElement");
+        requestData.put("trackElement", trackElement.toString());
+        return buildFinalPackage(requestData);
+    }
+
     public static JSONObject getSensorEventRequest(SensorEvent sensorEvent) {
         JSONObject requestData = new JSONObject();
         requestData.put("type", "sensorEvent");
