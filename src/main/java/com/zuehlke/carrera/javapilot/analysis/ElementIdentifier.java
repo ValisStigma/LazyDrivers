@@ -31,6 +31,9 @@ public class ElementIdentifier {
         this.threshHoldRight = threshHoldRight;
     }
 
+    public TrackElement identify(final double gyroZValue) {
+        return identify((int)gyroZValue);
+    }
     public TrackElement identify(final int gyroZValue) {
         if(gyroZValue <= threshHoldLeft) {
             return TrackElement.LeftCurve;
