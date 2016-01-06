@@ -28,7 +28,7 @@ public class TrackAnalyzer {
     }
     public ElementIdentifier.TrackElement analyzeMessage(com.zuehlke.carrera.javapilot.eventStorage.events.SensorEvent sensorEvent ) {
         floatingValues.add(sensorEvent.getGyroZValze());
-        if(floatingValues.size() > 7) {
+        if(floatingValues.size() > 3) {
             floatingValues.remove(0);
         }
         return firstRoundIdentifier.identify(getFloatingAverage());
