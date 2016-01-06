@@ -23,7 +23,7 @@ public class DirectionHistory {
         currentDirction = dir;
         directionHistory.add(dir);
 
-        System.out.println(lastDirection().toString() + ", " + currentDirection().toString());
+        //System.out.println(lastDirection().toString() + ", " + currentDirection().toString());
     }
 
     public Direction currentDirection(){

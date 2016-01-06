@@ -12,23 +12,27 @@ public class ProbeRacer extends LazyActor {
 
     private ActorHandler handler;
 
-    private int straightPower = 70;
-    private int curvePower = 250;
+    private int straightPower = 140;
+    private int curvePower = 255;
     private int steps = 4;
     private int current = curvePower;
 
+
+
     public ProbeRacer(ActorHandler handler) {
         this.handler = handler;
+
+
 
         this.registerMessage(new ActorMessage<SensorEvent>(SensorEvent.class) {
             @Override
             public void onRecieve(SensorEvent message) {
                 if (handler.directionHistory.historyDirection().equals(DirectionHistory.Direction.LEFT) ||
                     handler.directionHistory.historyDirection().equals(DirectionHistory.Direction.RIGHT)){
-                    if(current == curvePower) System.out.println();
+                    //if(current == curvePower) System.out.println();
                     current -= steps;
                     if(current < (straightPower*1.5)) current = (int)(straightPower*1.5);
-                    System.out.print(", "+current);
+                    //System.out.print(", "+current);
                     setPower(current);
                 }else {
                     current = curvePower;
