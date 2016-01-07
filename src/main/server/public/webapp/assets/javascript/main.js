@@ -6,6 +6,7 @@ function parseRoundTime(roundTime) {
     var roundTimeInSeconds = milisceconds / 1000;
     return roundTimeInSeconds + ' Sekunden'
 }
+
 $(function() {
 
     var gyroZCanvas = new SmoothieChart({millisPerPixel:49,grid:{fillStyle:'#ffffff',

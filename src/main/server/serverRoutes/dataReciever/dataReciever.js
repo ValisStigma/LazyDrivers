@@ -1,4 +1,5 @@
 var express = require('express');
+var persister = require('../../persistence/persister');
 var data = [];
 var app = express();
 var allowCrossDomain = function(request, response, next) {
@@ -21,7 +22,7 @@ function getDataPoints() {
 
 app.post('/', function(request, response) {
     var point = request.body.data;
-    console.log(point);
+    persister.storeMessage(point);
     data.push(point);
     response.json(point);
 });
