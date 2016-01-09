@@ -14,6 +14,7 @@ public class PowerHandler extends LazyActor {
         this.registerMessage(new ActorMessage<SensorEvent>(SensorEvent.class) {
             @Override
             public void onRecieve(SensorEvent message) {
+                System.out.println("StartPower="+handler.getStartPower());
                 getPilot().tell(new PowerAction(handler.getCurrentPower()), getPilot());
             }
         });

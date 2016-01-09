@@ -24,7 +24,8 @@ public class ActorHandler extends UntypedActor {
 
     private ActorRef pilot;
 
-    private int currentPower = 255;
+    private int currentPower = 0;
+    private int startPower = 0;
 
     public static Props props( ActorRef pilotActor ) {
         return Props.create(
@@ -59,7 +60,7 @@ public class ActorHandler extends UntypedActor {
         create(ProbeRacer.class, ()-> new ProbeRacer(this));
         create(AnalyseRacer.class, () -> new AnalyseRacer(this)).startWork();
         create(BoostRacer.class, () -> new BoostRacer(this));
-        create(InterpolationRacer.class, () -> new InterpolationRacer(this, directionHistory)).startWork();
+        //create(InterpolationRacer.class, () -> new InterpolationRacer(this, directionHistory)).startWork();
     }
 
     @Override
@@ -76,5 +77,13 @@ public class ActorHandler extends UntypedActor {
 
     public void setCurrentPower(int currentPower) {
         this.currentPower = currentPower;
+    }
+
+    public int getStartPower() {
+        return startPower;
+    }
+
+    public void setStartPower(int startPower) {
+        this.startPower = startPower;
     }
 }
