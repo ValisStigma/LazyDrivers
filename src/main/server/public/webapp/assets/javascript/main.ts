@@ -1,7 +1,6 @@
-
-
-
 import {SmoothieChart} from "smoothie";
+
+//import {SmoothieChart}from "smoothie";
 import {TimeSeries} from "smoothie";
 
 interface Displayable {
@@ -140,22 +139,42 @@ class Controller {
     velocityCanvas : smothieCharDisplay = new smothieCharDisplay('velocity-canvas');
     trackContainer : TrackElementDisplay = new TrackElementDisplay('#current-track-element');
     roundTimesContainer : RoundTimeDisplay = new RoundTimeDisplay('#round-times');
+    displays: Display[] = [this.gyroZCanvas, this.velocityCanvas, this.trackContainer, this.roundTimesContainer];
+    recording: boolean = false;
+
     constructor() {
 
     }
+    getDisplayMessage():string {
+        if(this.recording) {
+            return "Stop recording";
+        } else {
+            return "Start recording";
+        }
+    }
 
+    toggleRecording() {
+        this.recording = !this.recording;
+    }
+    clear() {
+        this.displays.forEach(function(dis) {
+            dis.clear();
+        })
+    }
     parseMessage(message: any) {
-        var type = message.type;
-        if(type) {
-            switch (type) {
-                case 'sensorEvent':
-                    return new SensorEvent(message.timestamp, message.datapoint, this.gyroZCanvas);
-                case 'velocityEvent':
-                    return new VelocityEvent(message.timestamp, message.datapoint, this.velocityCanvas);
-                case 'roundEvent':
-                    return new RoundTimeEvent(message.roundTime, this.roundTimesContainer);
-                case 'trackElement':
-                    return new TrackElement(message.trackElement, this.trackContainer);
+        if(this.recording) {
+            var type = message.type;
+            if(type) {
+                switch (type) {
+                    case 'sensorEvent':
+                        return new SensorEvent(message.timestamp, message.datapoint, this.gyroZCanvas);
+                    case 'velocityEvent':
+                        return new VelocityEvent(message.timestamp, message.datapoint, this.velocityCanvas);
+                    case 'roundEvent':
+                        return new RoundTimeEvent(message.roundTime, this.roundTimesContainer);
+                    case 'trackElement':
+                        return new TrackElement(message.trackElement, this.trackContainer);
+                }
             }
         }
     }
