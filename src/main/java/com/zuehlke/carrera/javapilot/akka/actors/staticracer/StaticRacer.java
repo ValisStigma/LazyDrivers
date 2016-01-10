@@ -22,7 +22,6 @@ public class StaticRacer extends LazyActor{
 
         this.registerMessage(new ActorMessage<SensorEvent>(SensorEvent.class) {
             public void onRecieve(SensorEvent message) {
-                System.out.println(message.toString());
                 setPower(handler.getStartPower());
             }
         });

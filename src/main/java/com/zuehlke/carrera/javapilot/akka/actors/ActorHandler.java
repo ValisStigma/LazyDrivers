@@ -18,7 +18,7 @@ import java.util.Map;
 
 public class ActorHandler extends UntypedActor {
 
-    public Map<Class, LazyActorRef> actors = new HashMap<>();
+    public Map<Class, LazyActorRef> actors;
 
     public DirectionHistory directionHistory;
 
@@ -48,6 +48,12 @@ public class ActorHandler extends UntypedActor {
 
     public ActorHandler(ActorRef pilot){
         this.pilot = pilot;
+        init();
+    }
+
+    private void init() {
+        actors = new HashMap<>();
+
         LazyActor.setData(this.pilot, this);
         directionHistory = new DirectionHistory();
 

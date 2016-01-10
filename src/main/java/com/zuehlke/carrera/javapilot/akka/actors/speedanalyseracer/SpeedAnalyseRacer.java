@@ -6,152 +6,62 @@ import com.zuehlke.carrera.javapilot.akka.actors.LazyActor;
 import com.zuehlke.carrera.javapilot.akka.actors.interpolationracer.DirectionHistory;
 import com.zuehlke.carrera.javapilot.akka.actors.interpolationracer.TrackDirection;
 import com.zuehlke.carrera.relayapi.messages.SensorEvent;
-import com.zuehlke.carrera.relayapi.messages.VelocityMessage;
 
 import com.zuehlke.carrera.timeseries.FloatingHistory;
-import org.apache.commons.math3.analysis.integration.TrapezoidIntegrator;
-import org.apache.commons.math3.analysis.integration.UnivariateIntegrator;
 
 import java.util.ArrayList;
-import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 
 public class SpeedAnalyseRacer extends LazyActor{
 
+    private final AccelerationRacer accelerationRacer;
+    private final ActorMessage<SensorEvent> preRacing;
     private ActorHandler handler;
-
-    private double lastSpeed = 0;
-    private double currentSpeed = 0;
-    private long lastTimeStamp = 0L;
-
-    class Accel {
-
-        public SortedMap<Long, Double> values = new TreeMap<>();
-
-        double lastSpeed = 0;
-        double lastTime = 0;
-
-        public double getAccel(double timeStamp){
-            double ret = 0;
-            for (double time:values.keySet()){
-                if (values.get(time) < timeStamp){
-                    ret = values.get(time);
-                }
-            }
-            return ret;
-        }
-
-        public double getAccelStamp(double timeStamp){
-            double ret = 0;
-            for (double time:values.keySet()){
-                if (values.get(time) < timeStamp){
-                    ret = time;
-                }
-            }
-            return ret;
-        }
-
-        public double getMinorDistance(double startSpeed, double startTime, double endTime){
-            SortedMap<Long, Double> nMap = values.subMap((long) getAccelStamp(startTime), (long) getAccelStamp(endTime));
-            double acceleration = 0;
-            for (double acc: nMap.values()){
-                acceleration += acc;
-            }
-            return startSpeed * (endTime-startTime) + 0.5*acceleration*(endTime-startTime)*(endTime-startTime);
-        }
-
-        public double getDistance(double startSpeed, double startTime, double endTime){
-            UnivariateIntegrator integrator = new TrapezoidIntegrator();
-            return startSpeed*(startTime-endTime) + startTime * integrator.integrate(64, v -> getAccel(v), endTime, startTime) -
-                    integrator.integrate(64, v -> v*getAccel(v), endTime, startTime);
-        }
-
-        public double getLazyDistance(double endSpeed, double endTime){
-            double ret = ((endSpeed + lastSpeed) / 2) * (endTime - lastTime);
-            lastSpeed = endSpeed;
-            lastTime = endTime;
-            return ret;
-        }
-    }
-
-    private Accel accel = new Accel();
+    private Accel accel;
 
 
     public SpeedAnalyseRacer(ActorHandler handler){
         this.handler = handler;
 
-        handleTrack();
-
-        this.registerMessage(new ActorMessage<SensorEvent>(SensorEvent.class) {
+        preRacing = new ActorMessage<SensorEvent>(SensorEvent.class){
             @Override
             public void onRecieve(SensorEvent message) {
-                if(message.getTimeStamp()-lastTimeStamp > 40){
-                    
+                if(handler.getStartPower() != 0){
+                    if(!startedRacingPhase) {
+                        setPower(handler.getStartPower());
+                    }
                 }
-                lastTimeStamp = message.getTimeStamp();
-                double acceleration = (message.getA()[0] * (9.8/256));
-                currentSpeed += acceleration; //TODO CHECK!!! (Unit/LSB) -> 9.8 for G Force
-                accel.values.put(message.getTimeStamp(), acceleration);
-
-                sendLazyVelocity(message.getTimeStamp());
-            }
-        });
-
-        this.registerMessage(new ActorMessage<VelocityMessage>(VelocityMessage.class) {
-            @Override
-            public void onRecieve(VelocityMessage message) {
-                System.out.println("Speed Diff: " + (message.getVelocity()-currentSpeed));
-
-                currentSpeed = lastSpeed = message.getVelocity();
-
-                System.out.println("Distance Calculated:  "+accel.getLazyDistance(message.getVelocity(), message.getTimeStamp()));
-            }
-        });
-    }
-
-    private void sendLazyVelocity(long timeStamp){
-        getPilot().forward(new LazyVelocityMessage(timeStamp, currentSpeed), getContext());
-    }
-
-
-
-
-
-
-
-    public int numberTrackElements = 24;
-
-
-
-
-    private ArrayList<TrackDirection> dirHistory = new ArrayList<>();
-
-    private FloatingHistory historyZ = new FloatingHistory(5);
-    private DirectionHistory.Direction lastDir = null;
-    private double speed;
-    private double time;
-    private boolean status = false;
-
-    public void handleTrack(){
-
-        this.registerMessage(new ActorMessage<VelocityMessage>(VelocityMessage.class){
-            @Override
-            public void onRecieve(VelocityMessage message) {
-                speed = message.getVelocity();
-                time = message.getTimeStamp();
-            }
-        });
-
-
-        ActorMessage<SensorEvent> racingPhase = new ActorMessage<SensorEvent>(SensorEvent.class) {
-            @Override
-            public void onRecieve(SensorEvent message) {
-
             }
         };
 
+        this.registerMessage(preRacing);
 
+        accel = new Accel(this);
+        accelerationRacer = new AccelerationRacer(this, accel);
+        handleTrack();
+    }
+
+    public int numberTrackParts = 17;
+    public int numberLRSwitches = 3;
+
+
+
+    private int numberTrackElements = numberLRSwitches+numberTrackParts;
+    private int currentPosition = 0;
+    private int currentPositionLastRound = 0;
+
+    private CopyOnWriteArrayList<TrackDirection> dirHistory = new CopyOnWriteArrayList<>();
+    private TrackDirection currentTrackElement;
+
+    private FloatingHistory historyZ = new FloatingHistory(5);
+    private DirectionHistory.Direction lastDir = null;
+
+    private double lastTrackElementSpeed = 0;
+    private double lastTrackElementTime = 0;
+
+    public void handleTrack(){
 
         this.registerMessage(new ActorMessage<SensorEvent>(SensorEvent.class) {
             @Override
@@ -162,64 +72,117 @@ public class SpeedAnalyseRacer extends LazyActor{
                 DirectionHistory.Direction currentDir = getDirection(interpolatedVal);
 
                 if(!currentDir.equals(lastDir)){
-                    dirHistory.add(new TrackDirection(lastDir, getDistance(message.getTimeStamp())));
+                    initNextTrackElement(message, currentDir);
                 }
 
-                System.out.println("Size of TrackHist: "+dirHistory.size());
-
-
                 if (dirHistory.size() > (numberTrackElements * 4)){
-                    ArrayList<DirectionHistory.Direction> initialRound = new ArrayList<>();
-                    System.out.println();
-
-                    for(int i = numberTrackElements/2; i < numberTrackElements/2 +numberTrackElements; i++){
-                        initialRound.add(dirHistory.get(i).getType());
-
-                        System.out.print(i + "  |  ");
+                    if(checkTrackInitLayout()){
+                        startRacingPhase();
                     }
-
-                    System.out.println();
-
-                    for(int n = 1; n < 3; n++){
-                        System.out.println();
-                        int counter = 0;
-                        for (int i = (numberTrackElements/2 +numberTrackElements*n); i < numberTrackElements*4; i++){
-                            if (counter<numberTrackElements) {
-                                System.out.print(i + "+" + n + "  |  ");
-                                if (!initialRound.get(counter)
-                                        .equals(dirHistory.get(i).getType())) {
-                                    status = true;
-                                }
-                                counter++;
-                            }
-                        }
-                    }
-
-                    if (status) {
-                        System.out.println("FAILDE");
-                    }else{
-                        System.out.println("Matched!!!!!!!!!");
-                        for (DirectionHistory.Direction dir: initialRound){
-                            System.out.print(dir+ "   |  ");
-                        }
-                        System.out.println();
-                    }
-
                 }
 
                 lastDir = currentDir;
             }
         });
+    }
 
+    private void initNextTrackElement(SensorEvent message, DirectionHistory.Direction currentDir) {
+        if(currentTrackElement != null) {
+            currentTrackElement.setDistance(accel.getDistance(lastTrackElementSpeed,lastTrackElementTime,message.getTimeStamp()));
+            setOrAdd(currentPosition, currentTrackElement);
+            currentPosition++;
+            currentPositionLastRound = currentPosition-numberTrackElements;
+        }
+        lastTrackElementSpeed = accel.getVelocity(message.getTimeStamp());
+        lastTrackElementTime = message.getTimeStamp();
+        currentTrackElement = new TrackDirection(currentDir, 0);
+        if (currentPositionLastRound > 0) {
+            currentTrackElement.isLRSwitch = dirHistory.get(currentPositionLastRound).isLRSwitch;
+        }
+        currentTrackElement.startTime = lastTrackElementTime;
+        currentTrackElement.startSpeed = lastTrackElementSpeed;
+    }
 
-
-
+    private void setOrAdd(int index, TrackDirection dir){
+        if (dirHistory.size()>index){
+            dirHistory.set(index, dir);
+            return;
+        }
+        dirHistory.add(dir);
     }
 
 
-    private double getDistance(double timestamp){
-        //return accel.getDistance(speed, time, timestamp);
-        return 0;
+    private boolean startedRacingPhase = false;
+    private void startRacingPhase() {
+
+        ActorMessage<SensorEvent> racingPhase = new ActorMessage<SensorEvent>(SensorEvent.class) {
+            @Override
+            public void onRecieve(SensorEvent message) {
+                for (int i = currentPositionLastRound; i < currentPosition; i++){
+                    TrackDirection test = dirHistory.get(i);
+                /*
+                    if(i==currentPositionLastRound){
+                        System.out.print("Dist: " +
+                                (accel.getDistance(test.startSpeed,test.startTime,message.getTimeStamp()) /
+                                        test.getDistance() * 100.0) +"%");
+                    }
+                */
+                    if(!test.isLRSwitch)
+                        System.out.print(test.getType() + " --> ");
+                }
+                System.out.println();
+            }
+        };
+        if (!startedRacingPhase) {
+            System.out.println("Started Racing");
+            this.registerMessage(racingPhase);
+            startedRacingPhase = true;
+        }
+    }
+
+    private boolean checkTrackInitLayout() {
+        ArrayList<DirectionHistory.Direction> initialRound = new ArrayList<>();
+        for(int i = numberTrackElements/2; i < numberTrackElements/2 +numberTrackElements; i++){
+            initialRound.add(dirHistory.get(i).getType());
+        }
+        for(int n = 1; n < 3; n++){
+            int counter = 0;
+            for (int i = (numberTrackElements/2 +numberTrackElements*n); i < numberTrackElements*4; i++){
+                if (counter<numberTrackElements) {
+                    if (!initialRound.get(counter)
+                            .equals(dirHistory.get(i).getType())) {
+                        return false;
+                    }
+                    counter++;
+                }
+            }
+        }
+
+        setLRSwitches();
+
+        return true;
+    }
+
+    private void setLRSwitches() {
+        if(numberLRSwitches > 0) {
+            TreeMap<Double, Integer> distMap = new TreeMap<>();
+
+            for (int i = currentPositionLastRound; i < currentPosition; i++) {
+                distMap.put(dirHistory.get(i).getDistance(), i);
+            }
+            int ctr = 0;
+            for (int i: distMap.values()){
+                if(ctr < numberLRSwitches){
+                    for (int j = i; j >= 0; j -= numberTrackElements){
+                        dirHistory.get(j).isLRSwitch = true;
+                    }
+                }else {
+                    break;
+                }
+                ctr++;
+            }
+        }
+
     }
 
     private DirectionHistory.Direction getDirection(double interpolatedVal){
@@ -231,9 +194,5 @@ public class SpeedAnalyseRacer extends LazyActor{
             return DirectionHistory.Direction.STRAIGHT;
         }
     }
-
-
-
-
 
 }

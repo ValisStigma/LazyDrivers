@@ -27,7 +27,6 @@ public class BoostRacer extends LazyActor{
                     if(counter == 0) {
                         handler.actors.get(StaticRacer.class).startWork();
                         handler.actors.get(BoostRacer.class).stopWork();
-                        System.out.println("Boosted");
                     }
                     counter = (counter + 1) % boostTimes;
                     setPower(boostPower);
