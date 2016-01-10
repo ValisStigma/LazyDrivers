@@ -1,14 +1,8 @@
 {
   "compilerOptions": {
-    "module": "amd",
-    "noImplicitAny": true,
-    "removeComments": true,
-    "preserveConstEnums": true,
-    "out": "./public/webapp/assets/javascript/main.js",
-    "sourceMap": true
-  },
-  "exclude": [
-    "node_modules",
-    "wwwroot"
-  ]
+    "target":  "es5",
+    "sourceMap": true,
+    "module": "amd"
+  }
 }
+

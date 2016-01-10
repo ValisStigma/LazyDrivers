@@ -5,18 +5,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="author" content="Slow Racer">
-    <script src="assets/javascript/smoothie.js"></script>
 
-    <script src="https://cdn.socket.io/socket.io-1.3.7.js"></script>
-    <script src="assets/javascript/jquery.js"></script>
-    <script src="libs/require/require.js" data-main="assets/javascript/main.js"></script>
-
-
-<    <script src="assets/javascript/main.js"></script>
-
-    -->
     <link rel="stylesheet" href="assets/css/bootstrap.min.css"/>
-    <link rel="stylesheet" href="assets/css/main.css"/>
+    <link rel="stylesheet" href="assets/scss/main.css"/>
 
     <title>Analyzer</title>
 </head>
@@ -25,30 +16,51 @@
 <div class="container">
 
     <h1>Track Analyse</h1>
-    <div class="col-xs-12">
-        <div class="col-xs-4">
-            <div class="btn btn-default" id="reload-btn"></div>
+    <div class="col-xs-12 button-row">
+        <div class="btn btn-danger" id="reload-btn">Analyse löschen</div>
+        <div class="btn btn-primary" id="record-btn">Analyse starten</div>
+
+        <div class="col-xs-4 inner-col">
         </div>
-        <div class="col-xs-4">
-            <div class="btn btn-primary" id="record-btn"></div>
+        <div class="col-xs-4 inner-col">
         </div>
     </div>
-    <div class="col-xs-12 col-lg-6">
+    <div class="col-xs-12 col-lg-6 inner-col">
         <h3>Gyro-Z</h3>
         <canvas id="gyroZ-canvas" width="500" height="200"></canvas>
 
     </div>
 
-    <div class="col-xs-12 col-lg-6">
+    <div class="col-xs-12 col-lg-6 inner-col">
         <h3>Geschwindigkeit</h3>
         <canvas id="velocity-canvas" width="500" height="200"></canvas>
     </div>
-    <div id="track-analysis" class="col-xs-12 col-lg-12">
-        <div id="current-track-element">
+    <div id="track-analysis" class="col-xs-12 col-lg-12 track-analysis inner-col">
+        <div id="current-track-element" class="current-track-element">
 
         </div>
+        <div class="col-xs-12 inner-col">
+            <div class="col-xs-4 col-xs-offset-4 hidden track left-track">
+                <div class="img-container">
+                    <img src="assets/images/left.jpg">
+
+                </div>
+            </div>
+            <div class="col-xs-4 col-xs-offset-4 hidden track straight-track">
+                <div class="img-container">
+
+                <img src="assets/images/straight.jpg">
+                    </div>
+            </div>
+            <div class="col-xs-4 col-xs-offset-4 hidden track right-track">
+                <div class="img-container">
+
+                <img src="assets/images/right.jpg">
+                    </div>
+            </div>
+        </div>
     </div>
-    <div id="round-times">
+    <div id="round-times inner-col">
 
     </div>
     <div class="hidden">
@@ -59,11 +71,13 @@
 
 </div>
 
-<script type="text/javascript">
+<script type="text/javascript" src="assets/javascript/main.js"></script>
+<script src="assets/javascript/smoothie.js"></script>
 
-
-
-</script>
+<script src="https://cdn.socket.io/socket.io-1.3.7.js"></script>
+<script src="assets/javascript/jquery.js"></script>
+<!--<script src="assets/javascript/main.js"></script>-->
+<script src="assets/javascript/start.js"></script>
 
 </body>
 </html>
