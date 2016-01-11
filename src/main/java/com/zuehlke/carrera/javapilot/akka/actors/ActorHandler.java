@@ -64,12 +64,12 @@ public class ActorHandler extends UntypedActor {
 
         create(SpeedAnalyseRacer.class, ()->new SpeedAnalyseRacer(this)).startWork();
 
-        create(StartRacer.class, () -> new StartRacer(this, StaticRacer.class)).startWork();
+        create(StartRacer.class, () -> new StartRacer(this, ProbeRacer.class)).startWork();
         create(StaticRacer.class, () -> new StaticRacer(this));
         create(ProbeRacer.class, ()-> new ProbeRacer(this));
         create(AnalyseRacer.class, () -> new AnalyseRacer(this)).startWork();
         create(BoostRacer.class, () -> new BoostRacer(this));
-        //create(InterpolationRacer.class, () -> new InterpolationRacer(this, directionHistory)).startWork();
+        create(InterpolationRacer.class, () -> new InterpolationRacer(this, directionHistory)).startWork();
     }
 
     @Override
@@ -85,6 +85,7 @@ public class ActorHandler extends UntypedActor {
 
         actors.values().stream().filter(actor -> actor.isWorking()).forEach(actor -> {
             actor.actorRef.forward(o, getContext());
+            //System.out.println("fw to : "+actor.actor.getClass().toString());
         });
     }
 

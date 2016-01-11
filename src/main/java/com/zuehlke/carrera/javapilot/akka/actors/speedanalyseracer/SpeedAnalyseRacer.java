@@ -40,7 +40,7 @@ public class SpeedAnalyseRacer extends LazyActor{
     private TrackDirection.State stateAfterStraight = TrackDirection.State.CURVE_RACE;
     private TrackDirection.State stateAfterCurve = TrackDirection.State.START_PROBE;
 
-    private long startProbeTimeMillis = -1; //-1 for not
+    private long startProbeTimeMillis = 1 * 6000; //-1 for not
 
     private int addedCurvePower = 3;
 
@@ -324,6 +324,7 @@ public class SpeedAnalyseRacer extends LazyActor{
             if (handler.getRaceStartTime() + startProbeTimeMillis < message.getTimeStamp()){
                 settingPower = false;
                 handler.actors.get(ProbeRacer.class).startWork();
+                handler.actors.get(SpeedAnalyseRacer.class).stopWork();
             }
         }
     }
