@@ -8,21 +8,17 @@ import com.zuehlke.carrera.javapilot.akka.actors.staticracer.StaticRacer;
 import com.zuehlke.carrera.relayapi.messages.SensorEvent;
 import com.zuehlke.carrera.timeseries.FloatingHistory;
 
-import java.util.ArrayList;
-
 public class InterpolationRacer extends LazyActor{
 
     private final ActorHandler handler;
 
-    private ArrayList<TrackDirection> dirHistory = new ArrayList<>();
+    private DirectionHistory dirHistory = new DirectionHistory();
 
     private FloatingHistory historyZ = new FloatingHistory(5);
-    private DirectionHistory.Direction lastDir = null;
 
-    public InterpolationRacer(ActorHandler handler){
+    public InterpolationRacer(ActorHandler handler, DirectionHistory history){
         this.handler = handler;
-
-
+        this.dirHistory = history;
 
         this.registerMessage(new ActorMessage<SensorEvent>(SensorEvent.class) {
             @Override
@@ -31,13 +27,17 @@ public class InterpolationRacer extends LazyActor{
                 historyZ.shift(current);
                 double interpolatedVal = (int) ((historyZ.currentMean() + current) / 2);
 
+                if(interpolatedVal < -1000){
+                    dirHistory.pushDirection(DirectionHistory.Direction.LEFT);
+                }else if(interpolatedVal > 1000){
+                    dirHistory.pushDirection(DirectionHistory.Direction.RIGHT);
+                }else{
+                    dirHistory.pushDirection(DirectionHistory.Direction.STRAIGHT);
+                }
 
-                if(interpolatedVal < -750 && lastDir!= DirectionHistory.Direction.LEFT){
-                    dirHistory.add(new TrackDirection(DirectionHistory.Direction.LEFT, 0)); //TODO DISTANCE
-                }else if(interpolatedVal > 750 && lastDir!= DirectionHistory.Direction.RIGHT){
-                    dirHistory.add(new TrackDirection(DirectionHistory.Direction.RIGHT, 0));
-                }else if(lastDir!= DirectionHistory.Direction.STRAIGHT){
-                    dirHistory.add(new TrackDirection(DirectionHistory.Direction.STRAIGHT, 0));
+                if (dirHistory.isFirst(DirectionHistory.Direction.STRAIGHT)){
+                    //handler.actors.get(StaticRacer.class).stopWork();
+                    //handler.actors.get(BoostRacer.class).startWork();
                 }
             }
         });
