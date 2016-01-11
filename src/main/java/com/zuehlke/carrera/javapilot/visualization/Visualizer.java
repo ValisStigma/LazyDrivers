@@ -2,6 +2,7 @@ package com.zuehlke.carrera.javapilot.visualization;
 
 import com.zuehlke.carrera.javapilot.analysis.ElementIdentifier;
 import com.zuehlke.carrera.javapilot.analysis.TrackAnalyzer;
+import com.zuehlke.carrera.javapilot.analysis.TrackElement;
 import com.zuehlke.carrera.javapilot.communication.Hermes;
 import com.zuehlke.carrera.javapilot.communication.RequestBuilder;
 import com.zuehlke.carrera.javapilot.eventStorage.events.RoundEvent;
@@ -20,27 +21,23 @@ public class Visualizer {
         trackAnalyzer = new TrackAnalyzer();
     }
 
-    public void sendTrackElement(ElementIdentifier.TrackElement trackElement) {
+    public void sendTrackElement(TrackElement trackElement) {
         JSONObject data = RequestBuilder.getTrackElementRequest(trackElement);
         new Thread(hermes.sendObject(data)).start();
     }
-    public void sendSensorEvent(SensorEvent event) {
-        JSONObject data = RequestBuilder.getSensorEventRequest(event);
+    public void sendSensorEvent(SensorEvent event, long raceId) {
+        JSONObject data = RequestBuilder.getSensorEventRequest(event, raceId);
         new Thread(hermes.sendObject(data)).start();
    }
 
-    public void sendVelocityEvent(VelocityEvent event) {
-        JSONObject data = RequestBuilder.getVelocityEventRequest(event);
+    public void sendVelocityEvent(VelocityEvent event, long raceId) {
+        JSONObject data = RequestBuilder.getVelocityEventRequest(event, raceId);
         new Thread(hermes.sendObject(data)).start();
     }
 
     public void sendRoundEvent(RoundEvent event) {
         JSONObject data = RequestBuilder.getRoundEventRequest(event);
         new Thread(hermes.sendObject(data)).start();
-    }
-
-    public void sendTrackElement(SensorEvent event) {
-
     }
 
 }

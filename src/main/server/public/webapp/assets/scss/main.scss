@@ -34,7 +34,18 @@ canvas {
     }
   }
 }
-
+.track-diplay {
+  font-family: monospace;
+}
 .button-row {
   text-align: right;
+}
+.sensor-events, .velocity-events {
+  div {
+    overflow-y:visible;
+    canvas {
+      overflow-y: visible;
+    }
+  }
+
 }

@@ -1,65 +1,31 @@
 
-var mongoose = require('mongoose');
-var Schema = mongoose.Schema;
-
-var trackElementSchema = new Schema({
-    trackElement: String
-    //_id : Schema.ObjectId
-});
-
-var sensorEventSchema = new Schema({
-    datapoint: Number,
-    timestamp: Number
-    //_id : Schema.ObjectId
-});
-
-var velocityEventSchema = new Schema({
-    datapoint: Number,
-    timestamp: Number
-    //_id : Schema.ObjectId
-});
-var roundEventSchema = new Schema({
-    roundTime: Number
-    //_id : Schema.ObjectId
-});
-
-var TrackElement = mongoose.model('TrackElement', trackElementSchema, "trackelements");
-var SensorEvent = mongoose.model('SensorEvent', sensorEventSchema, "sensorevents");
-var VelocityEvent = mongoose.model('VelocityEvent', velocityEventSchema, "velocityevents");
-var RoundEvent = mongoose.model('RoundEvent', roundEventSchema, "roundevents");
-
-
-
-mongoose.connect('mongodb://localhost/LazyDrivers');
+var db = require('./dataAccess');
 
 function persistTrackElement(elementType) {
-    var trackElement = new TrackElement({ trackElement: elementType });
+    var trackElement = new db.TrackElement({ trackElement: elementType });
     trackElement.save(function (err) {
         if (err) console.log(err);
     });
 }
 
-function persistSensorEvent(datapoint, timestamp) {
-    var sensorEvent = new SensorEvent({datapoint:datapoint, timestamp: timestamp});
+function persistSensorEvent(datapoint, timestamp, raceId) {
+    var sensorEvent = new db.SensorEvent({datapoint:datapoint, timestamp: timestamp, raceId: raceId});
     sensorEvent.save(function(err, s) {
         if(err) {
             console.log(err);
-        } else {
-            console.log(s);
-
         }
     });
 }
 
-function persistVelocityEvent(datapoint, timestamp) {
-    var velocityEvent = new VelocityEvent({datapoint: datapoint, timestamp: timestamp});
+function persistVelocityEvent(datapoint, timestamp, raceId) {
+    var velocityEvent = new db.VelocityEvent({datapoint: datapoint, timestamp: timestamp, raceId: raceId});
     velocityEvent.save(function(err) {
         if(err) console.error(err);
     });
 }
 
 function persistRoundEvent(roundtime) {
-    var roundEvent = new RoundEvent({roundTime:roundtime});
+    var roundEvent = new db.RoundEvent({roundTime:roundtime});
     roundEvent.save(function(err) {
         if(err) console.log(err);
     });
@@ -70,10 +36,10 @@ function storeMessage(message) {
     if(type) {
         switch (type) {
             case 'sensorEvent':
-                persistSensorEvent(message.datapoint, message.timestamp);
+                persistSensorEvent(message.datapoint, message.timestamp, message.raceId);
                 break;
             case 'velocityEvent':
-                persistVelocityEvent(message.datapoint, message.timestamp);
+                persistVelocityEvent(message.datapoint, message.timestamp, message.raceId);
                 break;
             case 'roundEvent':
                 persistRoundEvent(message.roundTime);

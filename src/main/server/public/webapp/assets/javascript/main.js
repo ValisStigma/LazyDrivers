@@ -1,7 +1,6 @@
-/// <reference path="Typefiles/smoothie.d.ts"/>
-/// <reference path="Typefiles/jquery.d.ts"/>
 var MyModule;
 (function (MyModule) {
+    var TrackRecognizer = trackRecognizer.TrackRecognizer;
     var RoundTimeDisplay = (function () {
         function RoundTimeDisplay(containerId) {
             this.divContainer = $('#' + containerId);
@@ -118,9 +117,10 @@ var MyModule;
     }());
     MyModule.VelocityEvent = VelocityEvent;
     var RoundTimeEvent = (function () {
-        function RoundTimeEvent(roundTime, display) {
+        function RoundTimeEvent(roundTime, timestamp, display) {
             this.roundTime = roundTime;
             this.container = display;
+            this.timestamp = timestamp;
             this.element = $('<div class="col-xs-4"><div class="roundtime"></div></div>');
             this.element.find('.roundtime').text('Rundenzeit: ' + this.parseRoundTime());
         }
@@ -135,9 +135,10 @@ var MyModule;
     }());
     MyModule.RoundTimeEvent = RoundTimeEvent;
     var TrackElement = (function () {
-        function TrackElement(trackElement, display) {
+        function TrackElement(trackElement, timestamp, display) {
             this.datapoint = trackElement;
             this.container = display;
+            this.timestamp = timestamp;
         }
         TrackElement.prototype.display = function () {
             this.container.add(this);
@@ -152,6 +153,7 @@ var MyModule;
             this.velocityCanvas = new smothieCharDisplay('velocity-canvas');
             this.trackContainer = new TrackElementDisplay('current-track-element');
             this.roundTimesContainer = new RoundTimeDisplay('round-times');
+            this.trackRecognizer = new TrackRecognizer('track-display');
             this.displays = [this.gyroZCanvas, this.velocityCanvas, this.trackContainer, this.roundTimesContainer];
             this.recording = false;
             this.toggleRecording = function () {
@@ -188,9 +190,13 @@ var MyModule;
                         case 'velocityEvent':
                             return new VelocityEvent(message.timestamp, message.datapoint, this.velocityCanvas);
                         case 'roundEvent':
-                            return new RoundTimeEvent(message.roundTime, this.roundTimesContainer);
+                            var currentRound = new RoundTimeEvent(message.roundTime, message.timestamp, this.roundTimesContainer);
+                            this.trackRecognizer.analyzeTrack(currentRound);
+                            return currentRound;
                         case 'trackElement':
-                            return new TrackElement(message.trackElement, this.trackContainer);
+                            var currentElement = new TrackElement(message.trackElement, message.timestamp, this.trackContainer);
+                            this.trackRecognizer.recordTrack(currentElement);
+                            return currentElement;
                     }
                 }
             }

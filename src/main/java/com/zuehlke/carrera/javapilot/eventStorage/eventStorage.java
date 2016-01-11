@@ -6,6 +6,7 @@ import com.zuehlke.carrera.javapilot.visualization.Visualizer;
 import com.zuehlke.carrera.relayapi.messages.*;
 import com.zuehlke.carrera.relayapi.messages.SensorEvent;
 
+import java.util.Date;
 import java.util.Map;
 
 public class EventStorage {
@@ -16,8 +17,9 @@ public class EventStorage {
     final TrackElementStorage trackElementStorage = new TrackElementStorage();
     private TrackAnalyzer trackAnalyzer = new TrackAnalyzer();
     final Visualizer visualizer = new Visualizer();
+    private long currentRaceTimeStamp;
     public EventStorage() {
-
+        this.currentRaceTimeStamp = new Date().getTime();
     }
 
     private void storeEvent(VelocityEvent message) {
@@ -42,13 +44,13 @@ public class EventStorage {
                 com.zuehlke.carrera.javapilot.eventStorage.events.SensorEvent event = new com.zuehlke.carrera.javapilot.eventStorage.events.SensorEvent(
                         (SensorEvent) message);
                 storeEvent(event);
-                visualizer.sendSensorEvent(event);
+                visualizer.sendSensorEvent(event, this.currentRaceTimeStamp);
                 visualizer.sendTrackElement(trackAnalyzer.analyzeMessage(event));
 
             } else if (message instanceof VelocityMessage) {
                 VelocityEvent velocityEvent = new VelocityEvent((VelocityMessage)message);
                 storeEvent(velocityEvent);
-                visualizer.sendVelocityEvent(velocityEvent);
+                visualizer.sendVelocityEvent(velocityEvent, this.currentRaceTimeStamp);
 
             } else if (message instanceof PenaltyMessage ) {
                storeEvent((PenaltyMessage) message );
@@ -57,6 +59,8 @@ public class EventStorage {
                 RoundEvent roundEvent = new RoundEvent((RoundTimeMessage) message);
                 storeEvent(roundEvent);
                 visualizer.sendRoundEvent(roundEvent);
+            } else if(message instanceof  RaceStartMessage) {
+                this.currentRaceTimeStamp = new Date().getTime();
             }
     }
 

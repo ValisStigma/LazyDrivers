@@ -26,12 +26,13 @@ public class TrackAnalyzer {
         int sum = floatingValues.stream().reduce(0, Integer::sum);
         return ((double)sum) / floatingValues.size();
     }
-    public ElementIdentifier.TrackElement analyzeMessage(com.zuehlke.carrera.javapilot.eventStorage.events.SensorEvent sensorEvent ) {
+
+    public TrackElement analyzeMessage(com.zuehlke.carrera.javapilot.eventStorage.events.SensorEvent sensorEvent ) {
         floatingValues.add(sensorEvent.getGyroZValze());
         if(floatingValues.size() > 3) {
             floatingValues.remove(0);
         }
-        return firstRoundIdentifier.identify(getFloatingAverage());
+        return new TrackElement(sensorEvent.getTimeStamp(), firstRoundIdentifier.identify(getFloatingAverage()));
     }
     public void analyzeMessage(Object message) {
         if (message instanceof SensorEvent) {
