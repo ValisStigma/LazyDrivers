@@ -10,6 +10,7 @@ import com.zuehlke.carrera.relayapi.messages.SensorEvent;
 
 import com.zuehlke.carrera.timeseries.FloatingHistory;
 
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
@@ -23,15 +24,52 @@ public class SpeedAnalyseRacer extends LazyActor{
     private ActorHandler handler;
     private Accel accel;
 
+
+
+    /*
+
+    CONFIG PART
+
+     */
+
+
+
+
+
+
+    private int customStartPower = 0;
+
+    public int numberTrackParts = 17;
+    public int numberLRSwitches = 3;
+
+
+    private ArrayList<Integer> startPowerRaiseRacing = new ArrayList<Integer>(){{
+        add(10);
+        add(5);
+        add(2);
+    }};
+
+
+
+
+
+
+
+
+
+
+    ///////////////////////////////////////////////////////////////////////////TODO END CONFIG
+
     private FloatingHistory gyr = new FloatingHistory(10);
 
+    private int racingPowerStartCounter = 0;
 
     private boolean initializedRacingValues = false;
     private TrackDirection.State globalState = TrackDirection.State.INIT;
-    private double resetFactor = 1.5;
-    private String recoveryPattern;
-    private int startPowerRaise = 20;
-    private int forwardCorrectionCount = 0;
+
+    private TrackDirection.State globalNextSate;
+
+    private int globalMaxPower;
 
     public SpeedAnalyseRacer(ActorHandler handler){
         this.handler = handler;
@@ -43,17 +81,7 @@ public class SpeedAnalyseRacer extends LazyActor{
                     if(!startedRacingPhase) {
                         setPower(handler.getStartPower());
                     } else {
-                        if(!initializedRacingValues){
-                            for (int i = 0; i < currentPosition; i++){
-                                TrackDirection curele = dirHistory.get(i);
-                                curele.standartPower = handler.getStartPower();
-                                curele.nextPower = handler.getStartPower();
-                            }
-                            currentTrackElement.standartPower = handler.getStartPower();
-                            currentTrackElement.nextPower = handler.getStartPower();
-                            initializedRacingValues = true;
-                            System.out.println("initialized Track speed");
-                        }
+                        initializeRacing();
                     }
                 }
             }
@@ -66,8 +94,24 @@ public class SpeedAnalyseRacer extends LazyActor{
         handleTrack();
     }
 
-    public int numberTrackParts = 17;
-    public int numberLRSwitches = 3;
+    private void initializeRacing() {
+        if(!initializedRacingValues){
+            int initValue = handler.getStartPower();
+            if(customStartPower != 0){
+                initValue = customStartPower;
+            }
+            for (int i = 0; i < currentPosition; i++){
+                TrackDirection curele = dirHistory.get(i);
+                curele.standartPower = initValue;
+                curele.nextPower = initValue;
+            }
+            currentTrackElement.standartPower = initValue;
+            currentTrackElement.nextPower = initValue;
+            globalMaxPower = initValue;
+            initializedRacingValues = true;
+            System.out.println("initialized Track speed");
+        }
+    }
 
 
 
@@ -86,6 +130,22 @@ public class SpeedAnalyseRacer extends LazyActor{
 
     private CopyOnWriteArrayList<TrackDirection> recoveryList = new CopyOnWriteArrayList<>();
 
+
+    private int getRacingRaise(){
+        int ret = 0;
+        if (racingPowerStartCounter<startPowerRaiseRacing.size()){
+            ret = startPowerRaiseRacing.get(racingPowerStartCounter);
+        }else{
+            globalNextSate = TrackDirection.State.RANDOM_RACE;
+        }
+        return ret;
+    }
+
+    private void updateRacingRaiseCounter(){
+        racingPowerStartCounter++;
+    }
+
+
     public void handleTrack(){
 
         this.registerMessage(new ActorMessage<SensorEvent>(SensorEvent.class) {
@@ -99,6 +159,7 @@ public class SpeedAnalyseRacer extends LazyActor{
 
 
                 if (globalState == TrackDirection.State.RACE){
+                    System.out.print(getPower() + " )- ");
                     for (int i = currentPositionLastRound; i < currentPosition; i++){
                         TrackDirection test = dirHistory.get(i);
                         if(!test.isLRSwitch)
@@ -112,7 +173,7 @@ public class SpeedAnalyseRacer extends LazyActor{
                 }
 
                 if (globalState == TrackDirection.State.RECOVER){
-                    setPower(handler.getStartPower());
+                    setPower(globalMaxPower);
                 }
 
 
@@ -123,35 +184,16 @@ public class SpeedAnalyseRacer extends LazyActor{
 
                     //TODO RECOVERY STATE
                     if (globalState == TrackDirection.State.RECOVER){
-                        if (!isMoving()){
-                            resetRecovery();
-                        }
-                        System.out.println("Recovering "+recoveryList.size()+"    " + currentDir);
-                        recoveryList.add(new TrackDirection(lastDir, 0));
-                        if (recoveryList.size() > numberTrackElements+1){//TODO RECOVERèè
-                            String hay = generatePattern(0, dirHistory.size());
-                            String pattern = generatePattern(recoveryList.size()-numberTrackElements, recoveryList.size(), recoveryList);
-                            setCurrentPos(hay.lastIndexOf(pattern)-1);
-
-                            System.out.println("Recovered at:  "+currentPosition+"   of   "+dirHistory.size()+ "  with "+pattern);
-
-                            currentTrackElement = dirHistory.get(currentPosition);
-
-                            globalState = TrackDirection.State.RACE;
-                        }
+                        recovery(currentDir);
                     }
 
 
                     if (globalState != TrackDirection.State.RECOVER){
                         if (globalState == TrackDirection.State.RACE) {
-                            if (currentPosition >= racingRoundCounter) {
-                                for (int i = currentPositionLastRound; i < currentPosition; i++) {
-                                    dirHistory.get(i).nextPower = dirHistory.get(i).standartPower + startPowerRaise;
-                                    System.out.println("Raising power To: " + dirHistory.get(i).nextPower);
-                                }
-                                currentTrackElement.standartPower = dirHistory.get(currentPositionLastRound).standartPower + startPowerRaise;
-                                currentTrackElement.nextPower = currentTrackElement.standartPower;
-                                racingRoundCounter += numberTrackElements;
+                            if (nextRoundFinished()) {
+                                updateGlobalPower();
+                                updateNextRacingSpeed();
+                                nextRoundUp();
                             }
                         }
                         initNextTrackElement(message, currentDir);
@@ -177,6 +219,51 @@ public class SpeedAnalyseRacer extends LazyActor{
                 }
             }
         });
+    }
+
+    private void updateNextRacingSpeed() {
+        for (int i = currentPositionLastRound; i < currentPosition; i++) {
+            dirHistory.get(i).nextPower = dirHistory.get(i).standartPower + getRacingRaise();
+            System.out.println("Raising power To: " + dirHistory.get(i).nextPower);
+        }
+
+        currentTrackElement.standartPower = dirHistory.get(currentPositionLastRound).standartPower + getRacingRaise();
+        currentTrackElement.nextPower = currentTrackElement.standartPower;
+    }
+
+    private void updateGlobalPower() { //TODO MAYBE UPDATE
+        if (currentPositionLastRound-numberTrackElements > numberTrackElements) {
+            if (globalMaxPower < dirHistory.get(currentPositionLastRound - numberTrackElements).standartPower) {
+                //globalMaxPower = dirHistory.get(currentPositionLastRound - numberTrackElements).standartPower;
+            }
+        }
+    }
+
+    private boolean nextRoundFinished() {
+        return currentPosition >= racingRoundCounter;
+    }
+
+    private void nextRoundUp() {
+        racingRoundCounter += numberTrackElements;
+    }
+
+    private void recovery(DirectionHistory.Direction currentDir) {
+        if (!isMoving()){
+            resetRecovery();
+        }
+        System.out.println("Recovering "+recoveryList.size()+"    " + currentDir);
+        recoveryList.add(new TrackDirection(lastDir, 0));
+        if (recoveryList.size() > numberTrackElements+1){
+            String hay = generatePattern(0, currentPosition);
+            String pattern = generatePattern(recoveryList.size()-numberTrackElements, recoveryList.size(), recoveryList);
+            setCurrentPos(hay.lastIndexOf(pattern)-1);
+
+            System.out.println("Recovered at:  "+currentPosition+"   of   "+dirHistory.size()+ "  with "+pattern);
+
+            currentTrackElement = dirHistory.get(currentPosition);
+
+            globalState = globalNextSate;
+        }
     }
 
     private void resetLRPos() {
@@ -223,12 +310,11 @@ public class SpeedAnalyseRacer extends LazyActor{
 
     private void recoverTrack(){
         resetRecovery();
-        startPowerRaise = (int)(startPowerRaise/1.6);
+        updateRacingRaiseCounter();
     }
 
     private void resetRecovery(){
         globalState = TrackDirection.State.RECOVER;
-        forwardCorrectionCount=0;
         recoveryList = new CopyOnWriteArrayList<>();
     }
 
@@ -291,6 +377,7 @@ public class SpeedAnalyseRacer extends LazyActor{
         if (!startedRacingPhase) {
             racingRoundCounter = currentPosition + numberTrackElements;
 
+            globalNextSate = TrackDirection.State.RACE;
             globalState = TrackDirection.State.RACE;
             System.out.println("Started Racing");
 
@@ -363,9 +450,9 @@ public class SpeedAnalyseRacer extends LazyActor{
     }
 
     private DirectionHistory.Direction getDirection(double interpolatedVal){
-        if(interpolatedVal < -750){
+        if(interpolatedVal < -1000){
             return DirectionHistory.Direction.LEFT;
-        }else if(interpolatedVal > 750){
+        }else if(interpolatedVal > 1000){
             return DirectionHistory.Direction.RIGHT;
         }else{
             return DirectionHistory.Direction.STRAIGHT;

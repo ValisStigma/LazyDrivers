@@ -7,7 +7,7 @@ public class TrackDirection {
 
 
     public enum State{
-        RACE, RECOVER, SATISFIED, INIT
+        RACE, RECOVER, SATISFIED, INIT, RANDOM_RACE
     }
 
     public State state = State.RACE;

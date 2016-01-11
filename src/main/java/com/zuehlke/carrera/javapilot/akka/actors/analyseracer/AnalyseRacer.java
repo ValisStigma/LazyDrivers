@@ -3,6 +3,7 @@ package com.zuehlke.carrera.javapilot.akka.actors.analyseracer;
 import com.zuehlke.carrera.javapilot.akka.actors.ActorHandler;
 import com.zuehlke.carrera.javapilot.akka.actors.ActorMessage;
 import com.zuehlke.carrera.javapilot.akka.actors.LazyActor;
+import com.zuehlke.carrera.javapilot.akka.actors.speedanalyseracer.LazyVelocityMessage;
 import com.zuehlke.carrera.javapilot.analysis.TrackAnalyzer;
 import com.zuehlke.carrera.javapilot.eventStorage.EventStorage;
 import com.zuehlke.carrera.relayapi.messages.RoundTimeMessage;
@@ -27,6 +28,13 @@ public class AnalyseRacer extends LazyActor {
 
                 eventStorage.storeEvent(message);
                 //System.out.println(message);
+            }
+        });
+
+        this.registerMessage(new ActorMessage<LazyVelocityMessage>(LazyVelocityMessage.class) {
+            @Override
+            public void onRecieve(LazyVelocityMessage message) {
+                eventStorage.storeEvent(message);
             }
         });
 
