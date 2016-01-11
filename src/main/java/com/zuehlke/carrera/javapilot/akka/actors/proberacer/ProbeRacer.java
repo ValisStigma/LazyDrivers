@@ -1,7 +1,5 @@
 package com.zuehlke.carrera.javapilot.akka.actors.proberacer;
 
-
-
 import com.zuehlke.carrera.javapilot.akka.actors.ActorHandler;
 import com.zuehlke.carrera.javapilot.akka.actors.ActorMessage;
 import com.zuehlke.carrera.javapilot.akka.actors.LazyActor;
@@ -17,12 +15,8 @@ public class ProbeRacer extends LazyActor {
     private int steps = 4;
     private int current = curvePower;
 
-
-
     public ProbeRacer(ActorHandler handler) {
         this.handler = handler;
-
-
 
         this.registerMessage(new ActorMessage<SensorEvent>(SensorEvent.class) {
             @Override

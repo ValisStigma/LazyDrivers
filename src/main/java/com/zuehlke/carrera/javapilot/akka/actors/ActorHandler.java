@@ -12,6 +12,8 @@ import com.zuehlke.carrera.javapilot.akka.actors.staticracer.StaticRacer;
 import com.zuehlke.carrera.javapilot.akka.actors.interpolationracer.DirectionHistory;
 import com.zuehlke.carrera.javapilot.akka.actors.interpolationracer.InterpolationRacer;
 import com.zuehlke.carrera.javapilot.akka.actors.startracer.StartRacer;
+import com.zuehlke.carrera.relayapi.messages.RaceStartMessage;
+import com.zuehlke.carrera.relayapi.messages.SensorEvent;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,6 +28,7 @@ public class ActorHandler extends UntypedActor {
 
     private int currentPower = 0;
     private int startPower = 0;
+    private long raceStartTime = 0;
 
     public static Props props( ActorRef pilotActor ) {
         return Props.create(
@@ -71,6 +74,15 @@ public class ActorHandler extends UntypedActor {
 
     @Override
     public void onReceive(Object o) throws Exception {
+        if (o instanceof RaceStartMessage){
+            raceStartTime = ((RaceStartMessage) o).getTimestamp();
+        }
+        if (raceStartTime == 0){
+            if (o instanceof SensorEvent){
+                raceStartTime = ((SensorEvent) o).getTimeStamp();
+            }
+        }
+
         actors.values().stream().filter(actor -> actor.isWorking()).forEach(actor -> {
             actor.actorRef.forward(o, getContext());
         });
@@ -91,5 +103,13 @@ public class ActorHandler extends UntypedActor {
 
     public void setStartPower(int startPower) {
         this.startPower = startPower;
+    }
+
+    public long getRaceStartTime() {
+        return raceStartTime;
+    }
+
+    public void setRaceStartTime(long raceStartTime) {
+        this.raceStartTime = raceStartTime;
     }
 }
