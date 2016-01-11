@@ -284,7 +284,6 @@ public class SpeedAnalyseRacer extends LazyActor{
             System.out.println("Recovering "+ recoveryPattern +"  from "+currentPosition+" with "+dirHistory.size());
             if (currentPosition < 1) {
                 setCurrentPos(1);
-                System.out.println("Well Fuck!!");
             }
             String pattern = generatePattern(currentPosition, dirHistory.size());
             while (pattern.indexOf(recoveryPattern) != 0){
