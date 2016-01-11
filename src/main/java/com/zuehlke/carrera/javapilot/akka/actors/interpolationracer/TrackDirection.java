@@ -1,13 +1,32 @@
 package com.zuehlke.carrera.javapilot.akka.actors.interpolationracer;
 
-/**
- * Created by tobias on 09.01.2016.
- */
+
 public class TrackDirection {
 
     private DirectionHistory.Direction type = DirectionHistory.Direction.STRAIGHT;
 
+
+    public enum State{
+        RACE, RECOVER, SATISFIED, INIT, RANDOM_RACE
+    }
+
+    public State state = State.RACE;
+
+    public boolean isLRSwitch;
+
+    public int standartPower = 0;
+    public int nextPower = 0;
+
+    public double percentage = 0.5; //TODO MAYBE
+    public double percentagePower = 0;
+
+
+
     private double distance;
+
+    public double startSpeed;
+    public double startTime;
+
 
     public TrackDirection(DirectionHistory.Direction dir, double distance){
         type = dir;

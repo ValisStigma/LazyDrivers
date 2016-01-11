@@ -5,10 +5,11 @@ import akka.actor.UntypedActor;
 
 
 import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class LazyActor extends UntypedActor {
 
-    private ArrayList<ActorMessage> messages = new ArrayList<>();
+    private CopyOnWriteArrayList<ActorMessage> messages = new CopyOnWriteArrayList<>();
 
     private static ActorRef pilot;
     private static ActorHandler handler;

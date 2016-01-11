@@ -26,7 +26,7 @@ public class StartRacer extends LazyActor {
                 }else{
                     handler.setStartPower(startPower);
                     handler.actors.get(StartRacer.class).stopWork();
-                    handler.actors.get(nextRacer).startWork();
+                    //handler.actors.get(nextRacer).startWork();
                 }
             }
         });
