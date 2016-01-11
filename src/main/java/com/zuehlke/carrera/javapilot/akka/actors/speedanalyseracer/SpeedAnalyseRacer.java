@@ -5,6 +5,7 @@ import com.zuehlke.carrera.javapilot.akka.actors.ActorMessage;
 import com.zuehlke.carrera.javapilot.akka.actors.LazyActor;
 import com.zuehlke.carrera.javapilot.akka.actors.interpolationracer.DirectionHistory;
 import com.zuehlke.carrera.javapilot.akka.actors.interpolationracer.TrackDirection;
+import com.zuehlke.carrera.javapilot.akka.actors.proberacer.ProbeRacer;
 import com.zuehlke.carrera.relayapi.messages.PenaltyMessage;
 import com.zuehlke.carrera.relayapi.messages.SensorEvent;
 
@@ -12,6 +13,7 @@ import com.zuehlke.carrera.timeseries.FloatingHistory;
 
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -34,27 +36,40 @@ public class SpeedAnalyseRacer extends LazyActor{
 
 
 
+    private TrackDirection.State stateAfterRace = TrackDirection.State.STRAIGHT_RACE;
+    private TrackDirection.State stateAfterStraight = TrackDirection.State.CURVE_RACE;
+    private TrackDirection.State stateAfterCurve = TrackDirection.State.START_PROBE;
 
+    private long startProbeTimeMillis = -1; //-1 for not
+
+    private int addedCurvePower = 3;
+
+
+    private int maxStraightPenaltyCount = 8;
+    private int maxCurvePenaltyCount = 8;
 
 
     private int customStartPower = 0;
+
 
     public int numberTrackParts = 17;
     public int numberLRSwitches = 3;
 
 
     private ArrayList<Integer> startPowerRaiseRacing = new ArrayList<Integer>(){{
-        add(10);
+        //add(10);
         add(5);
         add(2);
     }};
 
 
+    private int numberLongStraights = 4;
 
 
+    private long straightRaisedMillis = 150;
+    private long addedMillisStraight = 50;
 
-
-
+    private long addedPowerStraight = 3;
 
 
 
@@ -67,9 +82,14 @@ public class SpeedAnalyseRacer extends LazyActor{
     private boolean initializedRacingValues = false;
     private TrackDirection.State globalState = TrackDirection.State.INIT;
 
-    private TrackDirection.State globalNextSate;
+    private TrackDirection.State globalNextState;
 
     private int globalMaxPower;
+    private int lowestRecovery = Integer.MAX_VALUE;
+    private int curveRacePenaltyCount = 0;
+    private int straightRacePenaltyCount = 0;
+
+
 
     public SpeedAnalyseRacer(ActorHandler handler){
         this.handler = handler;
@@ -104,9 +124,13 @@ public class SpeedAnalyseRacer extends LazyActor{
                 TrackDirection curele = dirHistory.get(i);
                 curele.standartPower = initValue;
                 curele.nextPower = initValue;
+                curele.raisedStraightPower = initValue;
+                curele.millisRaisedStraight = straightRaisedMillis;
             }
             currentTrackElement.standartPower = initValue;
             currentTrackElement.nextPower = initValue;
+            currentTrackElement.raisedStraightPower = initValue;
+            currentTrackElement.millisRaisedStraight = straightRaisedMillis;
             globalMaxPower = initValue;
             initializedRacingValues = true;
             System.out.println("initialized Track speed");
@@ -136,7 +160,10 @@ public class SpeedAnalyseRacer extends LazyActor{
         if (racingPowerStartCounter<startPowerRaiseRacing.size()){
             ret = startPowerRaiseRacing.get(racingPowerStartCounter);
         }else{
-            globalNextSate = TrackDirection.State.RANDOM_RACE;
+            globalNextState = stateAfterRace;
+        }
+        if (startPowerRaiseRacing.size() == 0){
+            globalNextState = stateAfterRace;
         }
         return ret;
     }
@@ -145,12 +172,22 @@ public class SpeedAnalyseRacer extends LazyActor{
         racingPowerStartCounter++;
     }
 
+    private boolean settingPower = true;
+    public void setPower(int nextPower){
+        if (settingPower){
+            super.setPower(nextPower);
+        }
+    }
+
 
     public void handleTrack(){
 
         this.registerMessage(new ActorMessage<SensorEvent>(SensorEvent.class) {
             @Override
             public void onRecieve(SensorEvent message) {
+
+                checkForProbeRacer(message);
+
                 gyr.shift(message.getG()[2]);
                 int current = message.getG()[2];
                 historyZ.shift(current);
@@ -159,17 +196,26 @@ public class SpeedAnalyseRacer extends LazyActor{
 
 
                 if (globalState == TrackDirection.State.RACE){
-                    System.out.print(getPower() + " )- ");
-                    for (int i = currentPositionLastRound; i < currentPosition; i++){
-                        TrackDirection test = dirHistory.get(i);
-                        if(!test.isLRSwitch)
-                            System.out.print(test.getType() + " --> ");
-                    }
-                    System.out.println(generatePattern(currentPositionLastRound, currentPosition));
+                    printTrackPrediction();
 
                     if (initializedRacingValues){
                         setPower(currentTrackElement.standartPower);
                     }
+                }
+
+                if (globalState == TrackDirection.State.STRAIGHT_RACE){
+                    printTrackPrediction();
+
+                    if(currentTrackElement.startTime + currentTrackElement.millisRaisedStraight < message.getTimeStamp()){
+                        setPower(currentTrackElement.raisedStraightPower);
+                    }else{
+                        setPower(currentTrackElement.standartPower);
+                    }
+                }
+
+                if (globalState == TrackDirection.State.STRAIGHT_RACE){
+                    printTrackPrediction();
+                    setPower(currentTrackElement.standartPower+currentTrackElement.curvePowerUp);
                 }
 
                 if (globalState == TrackDirection.State.RECOVER){
@@ -189,6 +235,17 @@ public class SpeedAnalyseRacer extends LazyActor{
 
 
                     if (globalState != TrackDirection.State.RECOVER){
+
+                        if (globalState != globalNextState && globalNextState!=null){
+                            System.out.println("checking changed State");
+                            if (nextRoundFinished()){
+                                globalState = globalNextState;
+                                System.out.println("CHANGED STATE TO: "+globalState);
+                                nextRoundUp();
+                            }
+                        }
+
+
                         if (globalState == TrackDirection.State.RACE) {
                             if (nextRoundFinished()) {
                                 updateGlobalPower();
@@ -196,6 +253,31 @@ public class SpeedAnalyseRacer extends LazyActor{
                                 nextRoundUp();
                             }
                         }
+
+
+                        if(globalState == TrackDirection.State.STRAIGHT_RACE){
+                            if (nextRoundFinished()){
+                                raiseStraightPower();
+                                nextRoundUp();
+                            }
+                        }
+
+
+                        if(globalState == TrackDirection.State.CURVE_RACE){
+                            if (nextRoundFinished()){
+                                for (int i = currentPositionLastRound; i < currentPosition; i++) {
+                                    if (dirHistory.get(i).getType() != DirectionHistory.Direction.STRAIGHT) {
+                                        dirHistory.get(i).curvePowerUp += addedCurvePower;
+                                    }
+                                }
+                                if(currentTrackElement.getType() != DirectionHistory.Direction.STRAIGHT){
+                                    currentTrackElement.curvePowerUp += addedCurvePower;
+                                }
+
+                                nextRoundUp();
+                            }
+                        }
+
                         initNextTrackElement(message, currentDir);
                     }
                 }
@@ -214,11 +296,67 @@ public class SpeedAnalyseRacer extends LazyActor{
         this.registerMessage(new ActorMessage<PenaltyMessage>(PenaltyMessage.class) {
             @Override
             public void onRecieve(PenaltyMessage message) {
+                if (globalState == TrackDirection.State.CURVE_RACE){
+                    curveRacePenaltyCount++;
+
+                    if (curveRacePenaltyCount >= maxCurvePenaltyCount){
+                        globalNextState = stateAfterCurve;
+                    }
+                }
+
+                if (globalState == TrackDirection.State.STRAIGHT_RACE){
+                    straightRacePenaltyCount++;
+
+                    if (straightRacePenaltyCount >= maxStraightPenaltyCount){
+                        globalNextState = stateAfterStraight;
+                    }
+                }
+
                 if (globalState != TrackDirection.State.RECOVER) {
                     recoverTrack();
                 }
             }
         });
+    }
+
+    private void checkForProbeRacer(SensorEvent message) {
+        if (startProbeTimeMillis != -1){
+            if (handler.getRaceStartTime() + startProbeTimeMillis < message.getTimeStamp()){
+                settingPower = false;
+                handler.actors.get(ProbeRacer.class).startWork();
+            }
+        }
+    }
+
+    private void raiseStraightPower() {
+        TreeMap<Double, Integer> distMap = new TreeMap<>(Collections.reverseOrder());
+
+        for (int i = currentPositionLastRound; i < currentPosition; i++) {
+            distMap.put(dirHistory.get(i).getDistance(), i);
+        }
+
+        int ctr = 0;
+        for (int i: distMap.values()){
+            if(ctr < numberLongStraights){
+                if (dirHistory.get(i).getType()== DirectionHistory.Direction.STRAIGHT) {
+                    dirHistory.get(i).millisRaisedStraight += addedMillisStraight;
+                    dirHistory.get(i).raisedStraightPower += addedPowerStraight;
+                    ctr++;
+                }
+            }else {
+                break;
+            }
+        }
+    }
+
+    private void printTrackPrediction() {
+        System.out.print(getPower() + " )- ");
+        for (int i = currentPositionLastRound; i < currentPosition; i++){
+            TrackDirection test = dirHistory.get(i);
+            if(!test.isLRSwitch)
+                System.out.print(test.getType() + " --> ");
+        }
+        System.out.println(generatePattern(currentPositionLastRound, currentPosition));
     }
 
     private void updateNextRacingSpeed() {
@@ -232,9 +370,9 @@ public class SpeedAnalyseRacer extends LazyActor{
     }
 
     private void updateGlobalPower() { //TODO MAYBE UPDATE
-        if (currentPositionLastRound-numberTrackElements > numberTrackElements) {
-            if (globalMaxPower < dirHistory.get(currentPositionLastRound - numberTrackElements).standartPower) {
-                //globalMaxPower = dirHistory.get(currentPositionLastRound - numberTrackElements).standartPower;
+        if (lowestRecovery > numberTrackElements && lowestRecovery!=Integer.MAX_VALUE) {
+            if (globalMaxPower < dirHistory.get(lowestRecovery).standartPower) {
+                globalMaxPower = dirHistory.get(lowestRecovery).standartPower;
             }
         }
     }
@@ -258,11 +396,16 @@ public class SpeedAnalyseRacer extends LazyActor{
             String pattern = generatePattern(recoveryList.size()-numberTrackElements, recoveryList.size(), recoveryList);
             setCurrentPos(hay.lastIndexOf(pattern)-1);
 
+            if (lowestRecovery > currentPosition) {
+                lowestRecovery = currentPosition - 1;
+            }
+
+
             System.out.println("Recovered at:  "+currentPosition+"   of   "+dirHistory.size()+ "  with "+pattern);
 
             currentTrackElement = dirHistory.get(currentPosition);
 
-            globalState = globalNextSate;
+            globalState = globalNextState;
         }
     }
 
@@ -279,33 +422,6 @@ public class SpeedAnalyseRacer extends LazyActor{
         return gyr.currentStDev() >= 10;
     }
 
-    /*private void forwardCorrectPosition() {
-        if (gyr.currentStDev() >= 10) {
-            System.out.println("Recovering "+ recoveryPattern +"  from "+currentPosition+" with "+dirHistory.size());
-            if (currentPosition < 1) {
-                setCurrentPos(1);
-            }
-            String pattern = generatePattern(currentPosition, dirHistory.size());
-            while (pattern.indexOf(recoveryPattern) != 0){
-                System.out.println("Matching "+ pattern+ " with " +recoveryPattern);
-
-                setCurrentPos(currentPosition+1);
-                if (currentPosition>dirHistory.size()){
-                    currentPosition = numberTrackElements * 4;
-                    System.out.println("Reseting match");
-                }
-                pattern = generatePattern(currentPosition, dirHistory.size());
-            }
-
-            for(int i = 0; i < dirHistory.size(); i++){
-                //dirHistory.get(i).nextPower = dirHistory.get(i).standartPower;
-            }
-
-            System.out.println("Recovered State to "+currentPosition+"  of available "+dirHistory.size());
-            currentTrackElement = dirHistory.get(currentPosition);
-            globalState = TrackDirection.State.RACE;
-        }
-    }*/
 
     private void recoverTrack(){
         resetRecovery();
@@ -350,6 +466,9 @@ public class SpeedAnalyseRacer extends LazyActor{
             TrackDirection lastEle = dirHistory.get(currentPositionLastRound);
             currentTrackElement.isLRSwitch = lastEle.isLRSwitch;
             currentTrackElement.standartPower = lastEle.nextPower;
+            currentTrackElement.curvePowerUp = lastEle.curvePowerUp;
+            currentTrackElement.raisedStraightPower = lastEle.raisedStraightPower;
+            currentTrackElement.millisRaisedStraight = lastEle.millisRaisedStraight;
             System.out.println("New Elem Power++"+lastEle.nextPower);
             currentTrackElement.nextPower = lastEle.nextPower;
         }
@@ -376,7 +495,7 @@ public class SpeedAnalyseRacer extends LazyActor{
         if (!startedRacingPhase) {
             racingRoundCounter = currentPosition + numberTrackElements;
 
-            globalNextSate = TrackDirection.State.RACE;
+            globalNextState = TrackDirection.State.RACE;
             globalState = TrackDirection.State.RACE;
             System.out.println("Started Racing");
 
@@ -384,6 +503,8 @@ public class SpeedAnalyseRacer extends LazyActor{
         }
     }
 
+
+    /*  //TODO MAYBEEE NEEDED
     private boolean checkTrackInitLayout() {
         ArrayList<DirectionHistory.Direction> initialRound = new ArrayList<>();
         for(int i = numberTrackElements/2; i < numberTrackElements/2 +numberTrackElements; i++){
@@ -405,7 +526,7 @@ public class SpeedAnalyseRacer extends LazyActor{
 
 
         return true;
-    }
+    }*/
 
 
     private boolean LRSwitchesSet = false;
