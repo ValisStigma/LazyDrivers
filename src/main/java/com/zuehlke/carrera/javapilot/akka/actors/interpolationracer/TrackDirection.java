@@ -6,9 +6,19 @@ public class TrackDirection {
     private DirectionHistory.Direction type = DirectionHistory.Direction.STRAIGHT;
 
 
+    public enum State{
+        RACE, RECOVER, SATISFIED, INIT
+    }
+
+    public State state = State.RACE;
+
     public boolean isLRSwitch;
 
     public int standartPower = 0;
+    public int nextPower = 0;
+
+    public double percentage = 0.5; //TODO MAYBE
+    public double percentagePower = 0;
 
 
 
