@@ -7,7 +7,7 @@ public class TrackDirection {
 
 
     public enum State{
-        RACE, RECOVER, SATISFIED, INIT, RANDOM_RACE
+        RACE, RECOVER, SATISFIED, INIT, STRAIGHT_RACE, CURVE_RACE, START_PROBE
     }
 
     public State state = State.RACE;
@@ -17,8 +17,13 @@ public class TrackDirection {
     public int standartPower = 0;
     public int nextPower = 0;
 
-    public double percentage = 0.5; //TODO MAYBE
-    public double percentagePower = 0;
+    public int curvePowerUp = 0;
+
+    public int raisedStraightPower = 0;
+    public long millisRaisedStraight = 0;
+
+    //public double percentage = 0.5; //TODO MAYBE
+    //public double percentagePower = 0;
 
 
 
