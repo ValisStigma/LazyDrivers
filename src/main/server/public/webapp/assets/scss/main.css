@@ -1,0 +1,32 @@
+canvas {
+  width: 100%; }
+
+.roundtime {
+  background-color: blue;
+  color: white;
+  padding: 1rem;
+  border-radius: 4px;
+  box-sizing: content-box;
+  margin-bottom: 1rem;
+  text-align: center; }
+
+.inner-col {
+  padding-left: 0; }
+
+.track-analysis {
+  min-height: 300px;
+  padding-top: 15px;
+  padding-bottom: 15px; }
+  .track-analysis .current-track-element {
+    text-align: center;
+    font-size: 22px; }
+  .track-analysis .track .img-container {
+    margin: auto;
+    text-align: center; }
+  .track-analysis .track img {
+    margin: auto; }
+
+.button-row {
+  text-align: right; }
+
+/*# sourceMappingURL=main.css.map */
